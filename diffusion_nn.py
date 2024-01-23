@@ -6,10 +6,6 @@ class DiffusionNN(DiffusionAbstract):
     """Abstract class for diffusion with non-analytic target (starting) dsn"""
 
     @abstractmethod
-    def target_data(self):
-        """Input for target dsn/data"""
-
-    @abstractmethod
     def nn_architecture(self):
         """Definition of the NN architecture"""
 

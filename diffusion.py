@@ -5,8 +5,8 @@ class DiffusionAbstract(ABC):
     """Abstract class for diffusion"""
 
     @abstractmethod
-    def target_dsn(self):
-        """Target (starting) dsn"""
+    def target_data(self):
+        """Target (starting) data"""
 
     @abstractmethod
     def forward_process(self):

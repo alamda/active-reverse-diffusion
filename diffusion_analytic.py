@@ -7,7 +7,8 @@ class DiffusionAnalytic(DiffusionAbstract):
 
     @abstractmethod
     def starting_dsn(self):
-        """Analytic expression for the target (starting) dsn"""
+        """Analytic expression for the target (starting) dsn
+        Called by self.target_data()"""
 
     @abstractmethod
     def score_fn(self):
