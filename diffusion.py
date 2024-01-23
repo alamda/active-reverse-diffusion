@@ -36,7 +36,3 @@ class DiffusionAbstract(ABC):
     def diffuse_backward(self):
         """Uses score from self.calc_score()"""
         pass
-
-
-if __name__ == "__main__":
-    pass
