@@ -1,24 +1,42 @@
-class Diffusion:
-  def __init__(self):
-    print("placeholder init function")
+from abc import ABC, abstractmethod
+
+
+class DiffusionAbstract(ABC):
+    """Abstract class for diffusion"""
+
+    @asbtractmethod
+    def __init__(self):
+        pass
+
+    @abstractmethod
+    def __delete__(self):
+        pass
+
+    @abstractmethod
+    def generate_target_dsn(self):
+        """Arbitrary starting distribution"""
+        pass
+
+    @abstractmethod
+    def diffuse_forward(self):
+        """Arbitrary forward diffusion process"""
+        pass
+
+    @abstractmethod
+    def calc_score(self):
+        """Score can be:
+            * Estimated through numerics if analytic expr known
+                * KL divergence
+            * Learned by a NN
+                * Loss function
+        """
+        pass
+
+    @abstractmethod
+    def diffuse_backward(self):
+        """Uses score from self.calc_score()"""
+        pass
+
+
+if __name__ == "__main__":
     pass
-
-  def __delete__(self):
-    pass
-
-  def forward_diffuse(self, matrix):
-    pass
-    return matrix
-
-  def backward_diffuse(self, matrix):
-    pass
-    return matrix
-
-  def calc_KL_div(self, dsn1, dsn2):
-    pass
-    return KL_div
-
-if __name__=="__main__":
-  myDiff = Diffusion()
-
-  del myDiff
