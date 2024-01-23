@@ -5,8 +5,8 @@ class DiffusionAbstract(ABC):
     """Abstract class for diffusion"""
 
     @abstractmethod
-    def generate_target_dsn(self):
-        """Arbitrary starting distribution"""
+    def target_dsn(self):
+        """Target (starting) dsn"""
 
     @abstractmethod
     def forward_process(self):
