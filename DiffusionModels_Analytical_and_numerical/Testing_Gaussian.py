@@ -24,13 +24,12 @@ tau = 0.2 # Persistence Time
 k = 1.0 # Not very relevant, just set it to 1
 N = 10000 # Number of trajectories to be generated after training
 
-
 data_distribution = torch.distributions.mixture_same_family.MixtureSameFamily(
     torch.distributions.Categorical(torch.tensor(plist)),
     torch.distributions.Normal(torch.tensor(mulist), torch.tensor(sigmalist))
 )
 
-dataset = data_distribution.sample(torch.Size([10000, 1]))
+dataset = data_distribution.sample(torch.Size([N, 1]))
 
 
 # Passive Case analytical
@@ -45,7 +44,7 @@ difflist_passive_numerical = ProcessData.diff_list(dataset, samples_passive_nume
 
 # Active case analytical
 x = np.sqrt(Tp/k + (Ta/(k*k*tau+k)))*np.random.randn(N)
-y = np.sqrt(Ta/tau)*np.random.randn(100000)
+y = np.sqrt(Ta/tau)*np.random.randn(N)
 samples_active_analytical, ymat = rda.reverse_process_active_new_multiple(x, y, Tp, Ta, tau, tsteps, dt, sigmalist, mulist, plist, k)
 difflist_active_analytical = ProcessData.diff_list(dataset, samples_active_analytical, tsteps, xmin=-10, xmax=10, bandwidth=0.2, kernel='gaussian', npoints=1000)
 
@@ -63,3 +62,5 @@ ax.plot(tlist, np.log(difflist_passive_numerical), label="Passive-Numerical")
 ax.plot(tlist, np.log(difflist_active_analytical), label="Active-Analytical")
 ax.plot(tlist, np.log(difflist_active_numerical), label="Active-Numerical")
 ax.legend()
+
+plt.savefig("diff.png")
