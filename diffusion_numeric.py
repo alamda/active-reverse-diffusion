@@ -1,22 +1,17 @@
 import abc.ABC
-
 from abc import abstractmethod
+from diffusion import DiffusionAbstract
 
 
-class DiffusionNumericAbstract(abc.ABC):
+class DiffusionNumericAbstract(DiffusionAbstract):
     """Abstract class for diffusion with non-analytic target (starting) dsn"""
 
-    @abstractmethod
-    def add_target(self):
-        """Set target data"""
+    def __init__(self, name="ndiff"):
+        super().__init__(name=name)
 
-    @abstractmethod
-    def add_noise(self):
-        """Define noise objects for the diffusion process"""
-
-    @abstractmethod
-    def forward_diffuse(self):
-        """Definition of forward diffusion"""
+        self.loss_fn = None
+        self.nn_arch = None
+        self.score_fn = None
 
     @abstractmethod
     def set_loss_fn(self):
@@ -37,7 +32,3 @@ class DiffusionNumericAbstract(abc.ABC):
     @abstractmethod
     def sample_reverse(self):
         """Generate target data from result of reverse diffusion"""
-
-    @abstractmethod
-    def compare_to_target(self):
-        """Compare the sample from reverse diffusion to sample from target dsn"""
