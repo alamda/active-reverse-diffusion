@@ -11,6 +11,8 @@ import ReverseDiffusionNumerical as rdn
 import ProcessData
 import matplotlib.pyplot as plt
 
+import cProfile
+
 sigmalist = [1.0, 1.0, 1.0] # Standard deviations of the distributions
 mulist = [-2.0, 0.0, 2.0] # Means of the distributions
 plist = [0.2, 0.5, 0.3] # Relative weight of the distributions
@@ -31,27 +33,39 @@ data_distribution = torch.distributions.mixture_same_family.MixtureSameFamily(
 
 dataset = data_distribution.sample(torch.Size([N, 1]))
 
+with cProfile.Profile() as pr:
+    # Passive Case analytical
+    x = np.sqrt(T)*np.random.randn(N)
+    samples_passive_analytical = rda.reverse_process_passive_new_multiple(x, T, tsteps, dt, sigmalist, mulist, plist)
+    difflist_passive_analytical = ProcessData.diff_list(dataset, samples_passive_analytical, tsteps, xmin=-10, xmax=10, bandwidth=0.2, kernel='gaussian', npoints=1000)
 
-# Passive Case analytical
-x = np.sqrt(T)*np.random.randn(N)
-samples_passive_analytical = rda.reverse_process_passive_new_multiple(x, T, tsteps, dt, sigmalist, mulist, plist)
-difflist_passive_analytical = ProcessData.diff_list(dataset, samples_passive_analytical, tsteps, xmin=-10, xmax=10, bandwidth=0.2, kernel='gaussian', npoints=1000)
+    pr.dump_stats("passive_analytical.prof")
+    
+with cProfile.Profile() as pr: 
+    #Passive Case numerical
+    all_models_passive = rdn.passive_training(dataset, tsteps, T, dt, nrnodes=4, iterations=500)
+    _, samples_passive_numerical = rdn.sampling(N, all_models_passive, T, dt, tsteps)
+    difflist_passive_numerical = ProcessData.diff_list(dataset, samples_passive_numerical, tsteps, xmin=-10, xmax=10, bandwidth=0.2, kernel='gaussian', npoints=1000)
+    
+    pr.dump_stats("passive_numerical.prof")
 
-#Passive Case numerical
-all_models_passive = rdn.passive_training(dataset, tsteps, T, dt, nrnodes=4, iterations=500)
-_, samples_passive_numerical = rdn.sampling(N, all_models_passive, T, dt, tsteps)
-difflist_passive_numerical = ProcessData.diff_list(dataset, samples_passive_numerical, tsteps, xmin=-10, xmax=10, bandwidth=0.2, kernel='gaussian', npoints=1000)
 
-# Active case analytical
-x = np.sqrt(Tp/k + (Ta/(k*k*tau+k)))*np.random.randn(N)
-y = np.sqrt(Ta/tau)*np.random.randn(N)
-samples_active_analytical, ymat = rda.reverse_process_active_new_multiple(x, y, Tp, Ta, tau, tsteps, dt, sigmalist, mulist, plist, k)
-difflist_active_analytical = ProcessData.diff_list(dataset, samples_active_analytical, tsteps, xmin=-10, xmax=10, bandwidth=0.2, kernel='gaussian', npoints=1000)
+with cProfile.Profile() as pr: 
+    # Active case analytical
+    x = np.sqrt(Tp/k + (Ta/(k*k*tau+k)))*np.random.randn(N)
+    y = np.sqrt(Ta/tau)*np.random.randn(N)
+    samples_active_analytical, ymat = rda.reverse_process_active_new_multiple(x, y, Tp, Ta, tau, tsteps, dt, sigmalist, mulist, plist, k)
+    difflist_active_analytical = ProcessData.diff_list(dataset, samples_active_analytical, tsteps, xmin=-10, xmax=10, bandwidth=0.2, kernel='gaussian', npoints=1000)
 
-# Active Case numerical
-all_models_x, all_models_eta = rdn.active_training(dataset, tsteps, Tp, Ta, tau, k, dt, nrnodes=4, iterations=500)
-_, _, samples_active_numerical, _ = rdn.sampling_active(N, all_models_x, all_models_eta, Tp, Ta, tau, k, dt, tsteps)
-difflist_active_numerical = ProcessData.diff_list(dataset, samples_active_numerical, tsteps, xmin=-10, xmax=10, bandwidth=0.2, kernel='gaussian', npoints=1000)
+    pr.dump_stats("active_analytical.prof")
+    
+with cProfile.Profile() as pr: 
+    # Active Case numerical
+    all_models_x, all_models_eta = rdn.active_training(dataset, tsteps, Tp, Ta, tau, k, dt, nrnodes=4, iterations=500)
+    _, _, samples_active_numerical, _ = rdn.sampling_active(N, all_models_x, all_models_eta, Tp, Ta, tau, k, dt, tsteps)
+    difflist_active_numerical = ProcessData.diff_list(dataset, samples_active_numerical, tsteps, xmin=-10, xmax=10, bandwidth=0.2, kernel='gaussian', npoints=1000)
+
+    pr.dump_stats("active_numerical.prof")
 
 fig, ax = plt.subplots(figsize=(5,5))
 ax.set_xlabel("Time")
