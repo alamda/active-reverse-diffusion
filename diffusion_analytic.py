@@ -6,14 +6,5 @@ class DiffusionAnalytic(DiffusionAbstract):
     """Abstract class for diffusion with analytic target (starting) dsn"""
 
     @abstractmethod
-    def starting_dsn(self):
-        """Analytic expression for the target (starting) dsn
-        Called by self.target_data()"""
-
-    @abstractmethod
-    def score_fn(self):
-        """Analytic expression for score function"""
-
-    @abstractmethod
-    def calc_kl_divergence(self):
-        """Calculate KL divergence between calculated and target dsns"""
+    def define_score_function(self):
+        """Define the analytical expression for the score funciton"""

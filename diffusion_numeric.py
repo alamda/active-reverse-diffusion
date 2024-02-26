@@ -6,12 +6,12 @@ class DiffusionNN(DiffusionAbstract):
     """Abstract class for diffusion with non-analytic target (starting) dsn"""
 
     @abstractmethod
-    def nn_architecture(self):
-        """Definition of the NN architecture"""
+    def define_loss_function(self):
+        """Define the loss function to be used for estimating score fn"""
 
     @abstractmethod
-    def loss_fn(self):
-        """Definition of loss fn used by NN"""
+    def define_nn_architecture(self):
+        """Definition of the NN architecture"""
 
     @abstractmethod
     def train_nn(self):

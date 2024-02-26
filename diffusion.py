@@ -1,31 +1,30 @@
-from abc import ABC, abstractmethod
+import abc.ABC
+from abc import abstractmethod
 
 
-class DiffusionAbstract(ABC):
+class DiffusionAbstract(abc.ABC):
     """Abstract class for diffusion"""
 
     @abstractmethod
-    def target_data(self):
-        """Target (starting) data"""
+    def sample_target(self):
+        """Define target (starting) data and sample"""
 
     @abstractmethod
-    def forward_process(self):
+    def define_noise(self):
+        """Define noise objects for the diffusion process"""
+
+    @abstractmethod
+    def forward_diffuse(self):
         """Definition of forward diffusion"""
 
     @abstractmethod
-    def reverse_process(self):
+    def reverse_diffuse(self):
         """Uses score from self.calc_score()"""
 
     @abstractmethod
-    def calc_score(self):
-        """Score can be:
-            * Estimated through numerics if analytic expr known
-                * KL divergence
-            * Learned by a NN
-                * Loss function
-        """
+    def sample_reverse(self):
+        """Sample the dsn from reverse diffusion process"""
 
     @abstractmethod
-    def diffuse(self):
-        """Generic diffuse method
-        Calls either self.forward_process() or self.reverse_process()"""
+    def compare_to_target(self):
+        """Compare the sample from reverse diffusion to sample from target dsn"""
