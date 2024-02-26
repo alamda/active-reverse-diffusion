@@ -9,10 +9,6 @@ class DiffusionNumericAbstract(DiffusionAbstract):
     def __init__(self, name="ndiff"):
         super().__init__(name=name)
 
-        self.loss_fn = None
-        self.nn_arch = None
-        self.score_fn = None
-
     @abstractmethod
     def set_loss_fn(self):
         """Define the loss function to be used for estimating score fn"""
@@ -24,11 +20,3 @@ class DiffusionNumericAbstract(DiffusionAbstract):
     @abstractmethod
     def learn_score_fn(self):
         """Train NN on forward diffusion"""
-
-    @abstractmethod
-    def reverse_diffuse(self):
-        """Uses score function to generate new dsn"""
-
-    @abstractmethod
-    def sample_reverse(self):
-        """Generate target data from result of reverse diffusion"""

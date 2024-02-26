@@ -1,5 +1,5 @@
 from diffusion_analytic import DiffusionAnalyticAbstract
 from diffusion_numeric import DiffusionNumericAbstract
 
-if __name__=="__main__":
-    
+if __name__ == "__main__":
+    pass

@@ -38,8 +38,14 @@ class DiffusionAbstract(abc.ABC):
                 raise AssertionError
         except AssertionError:
             print("Must have at least one type of noise in noise_list")
-            
-    
+
+    @abstractmethod
+    def reverse_diffuse(self):
+        """Uses score function"""
+
+    @abstractmethod
+    def sample_reverse(self):
+        """Generate target data from result of reverse diffusion"""
 
     @abstractmethod
     def compare_to_target(self):
