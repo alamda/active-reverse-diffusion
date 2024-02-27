@@ -17,8 +17,6 @@ class NoiseAbstract(AbstractBaseClass):
 
         self.current_noise = None
 
-        self.noise_list = []
-
     def set_temperature(self, T):
         """Define temperature (T) for the noise"""
         self.temperature = T
@@ -73,13 +71,5 @@ class NoiseAbstract(AbstractBaseClass):
 
     @ abstractmethod
     def update(self):
-        """Propagate noise forward in time (if tau is not None)"""
-
-    def record(self, time=None):
-        try:
-            if time is not None:
-                self.noise_list.append([time, self.current_noise])
-            else:
-                raise TypeError
-        except TypeError:
-            print("Time cannot be None")
+        """Propagate noise forward in time (if tau is not None)
+        or generate a new random sample of noise (if tau is None)"""
