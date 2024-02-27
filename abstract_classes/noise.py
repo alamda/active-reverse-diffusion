@@ -1,8 +1,8 @@
-import abc.ABC
+from abc import ABC as AbstractBaseClass
 from abc import abstractmethod
 
 
-class Noise(abc.ABC):
+class NoiseAbstract(AbstractBaseClass):
     """Abstract class for Noise"""
 
     def __init__(self, name="noise", T=None, tau=None):
@@ -24,7 +24,7 @@ class Noise(abc.ABC):
 
     @abstractmethod
     def generate_noise(self):
-        """Generate an initial value for noise"""
+        """Generate random value for noise"""
 
     def get_diffusion_contribution(self):
         """Contribution to the dynamics of the system"""
@@ -47,11 +47,6 @@ class Noise(abc.ABC):
 
         return contribution
 
-    def evolve(self, dt=None):
-        """Propagate noise forward in time (if tau is not None)"""
-        if self.correlation_time is not None:
-            self.update_noise(dt)
-
     @abstractmethod
-    def update_noise(self, dt=None):
-        """Calculate the change in noise and return new value"""
+    def update(self, dt=None, dim=None):
+        """Propagate noise forward in time (if tau is not None)"""
