@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from diffusion import DiffusionAbstract
+from abstract_classes.diffusion import DiffusionAbstract
 
 
 class DiffusionAnalytic(DiffusionAbstract):

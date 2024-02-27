@@ -1,7 +1,7 @@
-import abc.ABC
+from abc import ABC as AbstractBaseClass
 
 
-class DiffusionAbstract(abc.ABC):
+class DiffusionAbstract(AbstractBaseClass):
     def __init__(self, name="diff"):
         self.name = name
 

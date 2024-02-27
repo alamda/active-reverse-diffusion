@@ -3,19 +3,22 @@ import numpy as np
 
 
 class NoisePassive(NoiseAbstract):
-    def __init__(self, name="passive_noise", T=None, tau=None):
-        super().__init__(name=name, T=T, tau=tau)
+    def __init__(self, name="passive_noise", T=None, tau=None, dim=None):
+        super().__init__(name=name, T=T, tau=tau, dim=dim)
 
-    def generate_noise(self, dt=None, dim=None):
-        return np.sqrt(2*self.temperature*dt) * np.random.randn(dim)
+    def generate_noise(self, dt=None):
+        return np.sqrt(2*self.temperature*dt) * np.random.randn(self.dim)
 
-    def update(self, dt=None, dim=None):
-        self.current_noise = self.generate_noise(dt=dt, dim=dim)
+    def update(self, dt=None):
+        self.current_noise = self.generate_noise(dt=dt)
 
 
 if __name__ == "__main__":
-    myPassiveNoise = NoisePassive(T=0.5)
+    dim = 10000
+    dt = 0.02
 
-    print(myPassiveNoise.generate_noise(dt=0.1, dim=5))
+    myPassiveNoise = NoisePassive(T=0.5, dim=dim)
+
+    print(myPassiveNoise.generate_noise(dt=dt))
 
     del myPassiveNoise
