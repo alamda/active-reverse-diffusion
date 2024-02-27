@@ -21,21 +21,22 @@ class DiffusionAbstract(abc.ABC):
         """Define noise objects for the diffusion process"""
         self.noise_list.append(noise_obj)
 
-    def forward_diffuse(self, data, dt):
+    def forward_diffuse(self, data, dt, num_steps):
         """Forward diffusion process with all noise"""
 
         try:
-            if len(self.noise_list > 0):
-                for noise_obj in self.noise_list:
-                    if noise_obj.correlation_time is None:
-                        contribution = noise_obj.get_diffusion_contribution()
-                    else:
-                        contribution = dt * noise_obj.get_diffusion_contribution()
-                        noise_obj.evolve()
+            for i in range(num_steps):
+                if len(self.noise_list > 0):
+                    for noise_obj in self.noise_list:
+                        if noise_obj.correlation_time is None:
+                            contribution = noise_obj.get_diffusion_contribution()
+                        else:
+                            contribution = dt * noise_obj.get_diffusion_contribution()
+                            noise_obj.evolve(dt)
 
-                    data = data - data*dt + contribution
-            else:
-                raise AssertionError
+                        data = data - data*dt + contribution
+                else:
+                    raise AssertionError
         except AssertionError:
             print("Must have at least one type of noise in noise_list")
 

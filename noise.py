@@ -47,6 +47,11 @@ class Noise(abc.ABC):
 
         return contribution
 
-    @abstractmethod
-    def evolve(self):
+    def evolve(self, dt=None):
         """Propagate noise forward in time (if tau is not None)"""
+        if self.correlation_time is not None:
+            self.update_noise(dt)
+
+    @abstractmethod
+    def update_noise(self, dt=None):
+        """Calculate the change in noise and return new value"""
