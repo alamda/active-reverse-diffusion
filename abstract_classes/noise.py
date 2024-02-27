@@ -44,26 +44,22 @@ class NoiseAbstract(AbstractBaseClass):
         except TypeError:
             print("Noise dimension (dim) cannot be None")
 
+    @abstractmethod
+    def initialize_noise(self):
+        """Generate an initial value for the noise"""
+
     @ abstractmethod
-    def generate_noise(self):
+    def generate_noise(self, dt=None):
         """Generate random value for noise"""
 
-    def get_diffusion_contribution(self):
+    def get_diffusion_contribution(self, dt=None):
         """Contribution to the dynamics of the system"""
 
-        try:
-            if self.temperature is not None:
-                pass
-            else:
-                raise TypeError
-        except TypeError:
-            print("noise temperature is None")
-
         if self.correlation_time is None:  # Passive noise
-            self.current_noise = self.generate_noise()
+            self.current_noise = self.generate_noise(dt=dt)
         else:  # Active noise
             if self.current_noise is None:
-                self.current_noise = self.generate_noise()
+                self.current_noise = self.generate_noise(dt=dt)
 
         contribution = self.current_noise
 
