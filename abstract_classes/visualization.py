@@ -14,17 +14,15 @@ class VisualizationAbstract(AbstractBaseClass):
         plt.close('all')
 
     @abstractmethod
-    def plot_target_dsn(self, data=None, label="target"):
-        """Show the target data/dsn
-        Uses data from self.target_data()"""
+    def plot_dsn(self, data=None, label=None):
+        """Add histogram of dataset to dsn figure"""
 
     @abstractmethod
-    def plot_computed_dsn(self, data=None, label=None):
-        """Add histogram of dsn sample computed by diffusion process"""
-
-    @abstractmethod
-    def plot_diff(self, diff_arr=None):
+    def plot_diff(self, diff_arr=None, label=None):
         """Show the quality of the score function
             * KL divergence for analytic starting dsns
             * Loss function for score fns learned with NNs
         """
+
+    def show_plots(self):
+        plt.show()
