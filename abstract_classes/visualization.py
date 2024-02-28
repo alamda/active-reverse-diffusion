@@ -3,7 +3,7 @@ from abc import abstractmethod
 import matplotlib.pyplot as plt
 
 
-class DiffusionVisualization(AbstractBaseClass):
+class VisualizationAbstract(AbstractBaseClass):
     """Abstract class for visualizing diffusion simulations"""
 
     def __init__(self, name="viz"):
