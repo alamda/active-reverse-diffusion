@@ -38,11 +38,10 @@ class DiffusionAnalyticPassive(DiffusionAnalytic):
 
             z = np.exp((-(self.data - a*mu)**2)/(2*Delta_eff))
 
-            score_num = score_num - weight * \
+            score_num += -weight * \
                 np.sqrt(h)*np.power(Delta_eff, -1.5)*(self.data-a*mu)*z
 
-            score_den = score_den + weight * \
-                np.sqrt(h)*np.power(Delta_eff, -0.5)*z
+            score_den += weight * np.sqrt(h)*np.power(Delta_eff, -0.5)*z
 
         score = score_num / score_den
 
