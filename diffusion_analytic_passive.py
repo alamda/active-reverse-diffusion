@@ -15,8 +15,12 @@ class DiffusionAnalyticPassive(DiffusionAnalytic):
         self.score_fn_list = [self.score_fn]
 
     def initialize_data(self):
-        noise = self.noise_list[0]
-        return np.sqrt(noise.temperature)*np.random.randn(self.dim)
+        init_data_scale = 0
+
+        for noise in self.noise_list:
+            init_data_scale += np.sqrt(noise.temperature)
+
+        return init_data_scale*np.random.randn(self.dim)
 
     def score_fn(self, time=None, noise_obj=None):
         a = np.exp(-time)
