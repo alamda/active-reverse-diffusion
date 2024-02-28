@@ -56,14 +56,15 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     dt = 0.02
-    num_steps = 25
+    num_steps = 60000
     dim = 10000
 
     myPassiveNoise = NoisePassive(T=1.0, dim=dim)
     myPassiveNoise.initialize_noise(dt=dt)
     noise_list = [myPassiveNoise]
 
-    sigma_list = [1.0, 1.0, 1.0]
+    # sigma_list = [1.0, 1.0, 1.0]
+    sigma_list = [0.1, 0.1, 0.1]
     mu_list = [-2.0, 0.0, 2.0]
     weight_list = [0.2, 0.5, 0.3]
 
@@ -81,8 +82,8 @@ if __name__ == "__main__":
 
     fig, ax = plt.subplots()
 
-    ax.hist(myTargetDsn.samples.numpy(), bins=100, alpha=0.5)
-    ax.hist(data_trj[-1][1], bins=100, alpha=0.5)
+    ax.hist(myTargetDsn.samples.numpy(), bins=100, alpha=0.5, density=True)
+    ax.hist(data_trj[-1][1], bins=100, alpha=0.5, density=True)
 
     plt.show()
 
