@@ -20,7 +20,7 @@ class NoiseActive(NoiseAbstract):
             np.sqrt(2*self.temperature*dt) * \
             np.random.randn(self.dim)
 
-    def update(self, dt=None, score=score):
+    def update(self, dt=None, score=None):
         if self.current_noise is None:
             self.current_noise = self.generate_noise(dt=dt)
 
