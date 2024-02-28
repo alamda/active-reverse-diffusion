@@ -51,11 +51,12 @@ class DiffusionAnalyticPassive(DiffusionAnalytic):
 if __name__ == "__main__":
     from noise_passive import NoisePassive
     from target_multi_gaussian import TargetMultiGaussian
+    from visualization_1D import Visualization1D
 
     import matplotlib.pyplot as plt
 
     dt = 0.02
-    num_steps = 60000
+    num_steps = 600
     dim = 10000
 
     myPassiveNoise = NoisePassive(T=1.0, dim=dim)
@@ -79,11 +80,15 @@ if __name__ == "__main__":
 
     data_trj = myDiff.reverse_diffuse()
 
-    fig, ax = plt.subplots()
+    myViz = Visualization1D()
+    bins = 100
 
-    ax.hist(myTargetDsn.samples.numpy(), bins=100, alpha=0.5, density=True)
-    ax.hist(data_trj[-1][1], bins=100, alpha=0.5, density=True)
+    myViz.plot_dsn(myTargetDsn.samples.numpy(), bins=bins)
+    myViz.plot_dsn(data_trj[-1][1], bins=bins)
 
-    plt.show()
+    myViz.show_plots()
 
     del myDiff
+    del myTargetDsn
+    del myPassiveNoise
+    del myViz

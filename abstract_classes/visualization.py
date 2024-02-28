@@ -7,6 +7,7 @@ class VisualizationAbstract(AbstractBaseClass):
     """Abstract class for visualizing diffusion simulations"""
 
     def __init__(self, name="viz"):
+        self.name = name
         self.fig_dsn, self.ax_dsn = plt.subplots()
         self.fig_diff, self.ax_diff = plt.subplots()
 
@@ -14,7 +15,7 @@ class VisualizationAbstract(AbstractBaseClass):
         plt.close('all')
 
     @abstractmethod
-    def plot_dsn(self, data=None, label=None):
+    def plot_dsn(self, data=None, label=None, bins=None):
         """Add histogram of dataset to dsn figure"""
 
     @abstractmethod
