@@ -2,7 +2,7 @@ from abc import abstractmethod
 from abstract_classes.diffusion import DiffusionAbstract
 
 
-class DiffusionAnalytic(DiffusionAbstract):
+class DiffusionAnalyticAbstract(DiffusionAbstract):
     """Abstract class for diffusion with analytic target (starting) dsn"""
 
     def __init__(self, name="adiff", total_time=None, dt=None, num_steps=None,

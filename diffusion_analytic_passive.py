@@ -1,8 +1,8 @@
-from abstract_classes.diffusion_analytic import DiffusionAnalytic
+from abstract_classes.diffusion_analytic import DiffusionAnalyticAbstract
 import numpy as np
 
 
-class DiffusionAnalyticPassive(DiffusionAnalytic):
+class DiffusionAnalyticPassive(DiffusionAnalyticAbstract):
     def __init__(self, name="diffAP", total_time=None, dt=None, num_steps=None,
                  noise_list=None, target=None, dim=None):
 
