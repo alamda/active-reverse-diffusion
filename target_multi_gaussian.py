@@ -10,6 +10,8 @@ class TargetMultiGaussian(TargetAbstract):
         self.mu_list = mu_list
         self.weight_list = weight_list
 
+        self.define_target()
+
     def define_target(self, sigma_list=None, mu_list=None, weight_list=None, dim=None):
         if sigma_list is None:
             sigma_list = self.sigma_list

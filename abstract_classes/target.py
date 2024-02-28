@@ -13,7 +13,7 @@ class TargetAbstract(AbstractBaseClass):
 
     @abstractmethod
     def define_target(self):
-        """Define the target dsn"""
+        """Define the target dsn after it was initialized"""
 
     @abstractmethod
     def sample(self):

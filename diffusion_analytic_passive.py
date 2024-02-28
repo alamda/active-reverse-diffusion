@@ -67,7 +67,6 @@ if __name__ == "__main__":
                                       mu_list=mu_list,
                                       weight_list=weight_list,
                                       dim=dim)
-    myTargetDsn.define_target()
     myTargetDsn.sample()
 
     myDiff = DiffusionAnalyticPassive(dt=dt, num_steps=num_steps,
