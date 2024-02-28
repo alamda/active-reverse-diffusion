@@ -56,8 +56,8 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     dt = 0.02
-    num_steps = 1000
-    dim = 500
+    num_steps = 25
+    dim = 1000
 
     myPassiveNoise = NoisePassive(T=1.0, dim=dim)
     myPassiveNoise.initialize_noise(dt=dt)
@@ -99,6 +99,8 @@ if __name__ == "__main__":
     myViz.plot_diff(diff_arr=diff_arr)
 
     myViz.show_plots()
+
+    myViz.save_plots()
 
     del myDiff
     del myTargetDsn

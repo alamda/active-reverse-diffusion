@@ -28,6 +28,10 @@ class VisualizationAbstract(AbstractBaseClass):
     def show_plots(self):
         plt.show()
 
+    def save_plots(self):
+        self.fig_dsn.savefig("dsns.png")
+        self.fig_diff.savefig("diff.png")
+
     @abstractmethod
     def set_analysis_params(self):
         """Set params needed to calculate the diff between target and computed data"""
