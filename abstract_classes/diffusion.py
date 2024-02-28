@@ -58,22 +58,6 @@ class DiffusionAbstract(AbstractBaseClass):
     def forward_diffuse(self):
         """Forward diffusion process with all noise"""
 
-        try:
-            for i in range(self.num_steps):
-                if len(self.noise_list > 0):
-                    for noise_obj in self.noise_list:
-                        if noise_obj.correlation_time is None:
-                            contribution = noise_obj.get_diffusion_contribution()
-                        else:
-                            contribution = self.dt * noise_obj.get_diffusion_contribution()
-                            noise_obj.evolve(self.dt)
-
-                        self.data = self.data - self.data*self.dt + contribution
-                else:
-                    raise AssertionError
-        except AssertionError:
-            print("Must have at least one type of noise in noise_list")
-
     def reverse_diffuse(self):
         """Uses score function"""
         try:
@@ -92,12 +76,15 @@ class DiffusionAbstract(AbstractBaseClass):
             for (score_fn, noise_obj) in zip(self.score_fn_list, self.noise_list):
                 score = score_fn(time=time, noise_obj=noise_obj)
 
-                noise_contribution = noise_obj.get_diffusion_contribution(
-                    dt=self.dt)
+                if noise_obj.correlation_time is None:  # Passive noise
+                    noise_contribution = noise_obj.get_diffusion_contribution(
+                        dt=self.dt)
 
-                self.data += noise_contribution
+                    self.data += 2*noise_obj.temperature*score*self.dt + noise_contribution
+                else:  # Active noise
+                    self.data += -noise_obj.current_noise*self.dt
 
-                noise_obj.update(dt=self.dt)
+                noise_obj.update(dt=self.dt, score=score)
 
             self.data += self.dt*self.data
 
