@@ -56,8 +56,8 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     dt = 0.02
-    num_steps = 600
-    dim = 10000
+    num_steps = 1000
+    dim = 500
 
     myPassiveNoise = NoisePassive(T=1.0, dim=dim)
     myPassiveNoise.initialize_noise(dt=dt)
@@ -85,6 +85,18 @@ if __name__ == "__main__":
 
     myViz.plot_dsn(myTargetDsn.samples.numpy(), bins=bins)
     myViz.plot_dsn(data_trj[-1][1], bins=bins)
+
+    myViz.set_analysis_params(xmin=-10, xmax=10, bandwidth=0.2,
+                              kernel='gaussian', num_points=10000)
+
+    print("calculating diff")
+
+    diff_list = myViz.calc_diff(target_data=myTargetDsn.samples.numpy(),
+                                calc_data=data_trj)
+
+    diff_arr = np.array(diff_list)
+
+    myViz.plot_diff(diff_arr=diff_arr)
 
     myViz.show_plots()
 

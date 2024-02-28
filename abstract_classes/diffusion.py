@@ -69,24 +69,25 @@ class DiffusionAbstract(AbstractBaseClass):
         data_trj = []
 
         for time_idx in range(self.num_steps, 0, -1):
-            data_trj.append([time_idx, self.data])
+
+            data_trj.append([time_idx, self.data.copy()])
 
             time = time_idx*self.dt
+
+            noise_contribution = 0
 
             for (score_fn, noise_obj) in zip(self.score_fn_list, self.noise_list):
                 score = score_fn(time=time, noise_obj=noise_obj)
 
                 if noise_obj.correlation_time is None:  # Passive noise
-                    noise_contribution = noise_obj.get_diffusion_contribution(
-                        dt=self.dt)
-
-                    self.data += 2*noise_obj.temperature*score*self.dt + noise_contribution
+                    noise_contribution += 2*noise_obj.temperature*score*self.dt + \
+                        noise_obj.get_diffusion_contribution(dt=self.dt)
                 else:  # Active noise
-                    self.data += -noise_obj.current_noise*self.dt
+                    noise_contribution += -noise_obj.current_noise*self.dt
 
                 noise_obj.update(dt=self.dt, score=score)
 
-            self.data += self.dt*self.data
+            self.data += noise_contribution + self.dt*self.data
 
         return data_trj
 
