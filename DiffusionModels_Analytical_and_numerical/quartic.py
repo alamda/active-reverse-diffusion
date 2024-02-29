@@ -17,6 +17,37 @@ import itertools
 from itertools import permutations
 import scipy.interpolate
 
+import os
+from multiprocess import Pool
+
+
+def plot_hist(samples, x_arr, y_arr, fname, title):
+    fig, ax = plt.subplots()
+    ax.hist(samples, bins=100, density=True)
+    ax.plot(x_arr, y_arr*1000, color='orange', alpha=0.50)
+    ax.set_title(title)
+
+    plt.savefig(fname)
+
+    plt.close(fig)
+
+
+def plot_diff(difflist_passive_numerical, difflist_active_numerical,
+              tlist, title, fname):
+    fig, ax = plt.subplots(figsize=(5, 5))
+    ax.set_title(title)
+    ax.set_xlabel("Time")
+    ax.set_ylabel("Log(KL-Divergence)")
+
+    ax.plot(tlist, np.log(difflist_passive_numerical),
+            label="Passive-Numerical")
+    ax.plot(tlist, np.log(difflist_active_numerical), label="Active-Numerical")
+    ax.legend()
+
+    plt.savefig(fname)
+
+    plt.close(fig)
+
 
 def inverse_transform_sampling(x, y, n_samples):
     inv_cdf = scipy.interpolate.interp1d(y, x)
@@ -24,20 +55,10 @@ def inverse_transform_sampling(x, y, n_samples):
     return inv_cdf(r)
 
 
-def diffuse_quartic(a=None, b=None, c=None, tsteps=None, dt=None,
+def diffuse_quartic(pool=None, a=None, b=None, c=None, tsteps=None, dt=None,
                     Tp=None, Ta=None, tau=None, k=1, N=None):
 
     ofile_base = f"a{a}_b{b}_tsteps{tsteps}_dt{dt}_Tp{Tp}_Ta{Ta}_tau{tau}_N{N}"
-
-    # sigmalist = [1.0, 1.0, 1.0]  # Standard deviations of the distributions
-    # mulist = [-2.0, 0.0, 2.0]  # Means of the distributions
-    # plist = [0.2, 0.5, 0.3]  # Relative weight of the distributions
-
-    # data_distribution = torch.distributions.mixture_same_family.MixtureSameFamily(
-    #     torch.distributions.Categorical(torch.tensor(plist)),
-    #     torch.distributions.Normal(
-    #         torch.tensor(mulist), torch.tensor(sigmalist))
-    # )
 
     n = 50000
     x_arr = np.linspace(-20, 20, n)
@@ -55,15 +76,14 @@ def diffuse_quartic(a=None, b=None, c=None, tsteps=None, dt=None,
     dataset = torch.tensor(inverse_transform_sampling(
         x_arr, cdf_arr, N))
 
-    fig, ax = plt.subplots()
-    # ax.hist(dataset, bins=100, density=True, histtype='step')
-    ax.hist(dataset, bins=100, density=True)
-    ax.plot(x_arr, y_arr*1000, color='orange', alpha=0.50)
+    pool.apply_async(plot_hist, (dataset, x_arr, y_arr,
+                                 f"{ofile_base}_target.png",
+                                 f"a={a}, b={b}, Ta={Ta}, Tp={Tp}, tau={tau} Target Sample",))
 
-    plt.show()
+    dataset.reshape((N, 1))
 
     with open(f"{ofile_base}_target_sample.pkl", 'wb') as f:
-        pickle.dump(dataset, f)
+        pool.apply_async(pickle.dump, (dataset, f,))
 
     # Passive Case numerical
     all_models_passive = rdn.passive_training(
@@ -73,13 +93,17 @@ def diffuse_quartic(a=None, b=None, c=None, tsteps=None, dt=None,
         N, all_models_passive, T, dt, tsteps)
 
     with open(f"{ofile_base}_samples_PN.pkl", 'wb') as f:
-        pickle.dump(samples_passive_numerical, f)
+        pool.apply_async(pickle.dump, (samples_passive_numerical, f,))
 
-    difflist_passive_numerical = ProcessData.diff_list(
-        dataset, samples_passive_numerical, tsteps, xmin=-10, xmax=10, bandwidth=0.2, kernel='gaussian', npoints=1000)
+    pool.apply_async(plot_hist, (samples_passive_numerical[-1], x_arr, y_arr,
+                                 f"{ofile_base}_samples_PN.png",
+                                 f"a={a}, b={b}, Ta={Ta}, Tp={Tp}, tau={tau} Passive Sample",))
+
+    difflist_passive_numerical = ProcessData.diff_list_multiproc(
+        pool, dataset, samples_passive_numerical, tsteps, xmin=-10, xmax=10, bandwidth=0.2, kernel='gaussian', npoints=1000)
 
     with open(f"{ofile_base}_difflist_PN.pkl", 'wb') as f:
-        pickle.dump(difflist_passive_numerical, f)
+        pool.apply_async(pickle.dump, (difflist_passive_numerical, f,))
 
     # Active Case numerical
     all_models_x, all_models_eta = rdn.active_training(
@@ -89,49 +113,55 @@ def diffuse_quartic(a=None, b=None, c=None, tsteps=None, dt=None,
         N, all_models_x, all_models_eta, Tp, Ta, tau, k, dt, tsteps)
 
     with open(f"{ofile_base}_samples_AN.pkl", 'wb') as f:
-        pickle.dump(samples_active_numerical, f)
+        pool.apply_async(pickle.dump(samples_active_numerical, f,))
 
     difflist_active_numerical = ProcessData.diff_list(
         dataset, samples_active_numerical, tsteps, xmin=-10, xmax=10, bandwidth=0.2, kernel='gaussian', npoints=1000)
 
+    pool.apply_async(plot_hist, (samples_active_numerical[-1], x_arr, y_arr,
+                                 f"{ofile_base}_samples_AN.png",
+                                 f"a={a}, b={b}, Ta={Ta}, Tp={Tp}, tau={tau} Active Sample",))
+
     with open(f"{ofile_base}_difflist_AN.pkl", 'wb') as f:
-        pickle.dump(difflist_active_numerical, f)
+        pool.apply_async(pickle.dump, (difflist_active_numerical, f,))
 
-    fig, ax = plt.subplots(figsize=(5, 5))
-    ax.set_title("a={a}, b={b}, Ta={Ta}, Tp={Tp}, tau={tau}")
-    ax.set_xlabel("Time")
-    ax.set_ylabel("Log(KL-Divergence)")
     tlist = np.linspace(dt, tsteps*dt, tsteps-1)
-    ax.plot(tlist, np.log(difflist_passive_numerical),
-            label="Passive-Numerical")
-    ax.plot(tlist, np.log(difflist_active_numerical), label="Active-Numerical")
-    ax.legend()
 
-    plt.savefig(f"{ofile_base}_diff.png")
+    title = f"a={a}, b={b}, Ta={Ta}, Tp={Tp}, tau={tau}"
+    fname = f"{ofile_base}_diff.png"
 
-    fig.close()
+    pool.apply_async(plot_diff, (difflist_passive_numerical, difflist_active_numerical,
+                                 tlist, title, fname,))
 
-    print(f"{ofile_Base} done")
+    print(f"{ofile_base} done")
 
 
-tsteps = 25  # Number of timesteps for running simulation
-dt = 0.02  # Timestep size
-T = 1.0  # Temperature for passive diffusion
-Tp = 0.5  # Passive Temperature for Active diffusion
-Ta = 0.5  # Active Temperature for Active diffusion
-tau = 0.2  # Persistence Time
-k = 1.0  # Not very relevant, just set it to 1
-N = 10000  # Number of trajectories to be generated after training
+if __name__ == "__main__":
 
+    tsteps = 100  # Number of timesteps for running simulation
+    dt = 0.02  # Timestep size
+    T = 1.0  # Temperature for passive diffusion
+    Tp = 0.5  # Passive Temperature for Active diffusion
+    Ta = 0.5  # Active Temperature for Active diffusion
+    # tau = 0.2  # Persistence Time
+    k = 1.0  # Not very relevant, just set it to 1
+    N = 10000  # Number of trajectories to be generated after training
 
-# a_list = np.linspace(1, 2, 3)
-# b_list = np.linspace(1, 2, 3)
+    # a_list = np.linspace(1, 2, 3)
+    # b_list = np.linspace(1, 2, 3)
 
-a_list = [1]
-b_list = [-100]
+    a_list = np.linspace(-1, 10, 5)
+    b_list = np.linspace(-100, 100, 5)
+    tau_list = np.linspace(0.01, 1, 5)
 
-for a in a_list:
-    for b in b_list:
-        c = b**2/(4*a)
-        diffuse_quartic(a=a, b=b, c=c, tsteps=tsteps, dt=dt,
-                        Tp=Tp, Ta=Ta, tau=tau, k=1, N=N)
+    with Pool(processes=16) as pool:
+        for tau in tau_list:
+            for a in a_list:
+                for b in b_list:
+                    ofile_base = f"a{a}_b{b}_tsteps{tsteps}_dt{dt}_Tp{Tp}_Ta{Ta}_tau{tau}_N{N}"
+
+                    if not os.path.isfile(f"{ofile_base}_diff.png") and (a != 0):
+                        c = b**2/(4*a)
+
+                        diffuse_quartic(pool=pool, a=a, b=b, c=c, tsteps=tsteps, dt=dt,
+                                        Tp=Tp, Ta=Ta, tau=tau, k=1, N=N)
