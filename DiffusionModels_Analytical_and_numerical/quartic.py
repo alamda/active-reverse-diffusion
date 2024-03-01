@@ -60,6 +60,13 @@ def diffuse_quartic(pool=None, a=None, b=None, c=None, tsteps=None, dt=None,
 
     ofile_base = f"a{a}_b{b}_tsteps{tsteps}_dt{dt}_Tp{Tp}_Ta{Ta}_tau{tau}_N{N}"
 
+    ofile_target_sample = f"{ofile_base}_target_sample.pkl"
+    ofile_samples_PN = f"{ofile_base}_samples_PN.pkl"
+    ofile_difflist_PN = f"{ofile_base}_difflist_PN.pkl"
+
+    ofile_samples_AN = f"{ofile_base}_samples_AN.pkl"
+    ofile_difflist_AN = f"{ofile_base}_difflist_AN.pkl"
+
     n = 50000
     x_arr = np.linspace(-20, 20, n)
     y_arr = a*x_arr**4 + b*x_arr**2 + c
@@ -73,57 +80,89 @@ def diffuse_quartic(pool=None, a=None, b=None, c=None, tsteps=None, dt=None,
     for i in range(1, n, 1):
         cdf_arr[i] = cdf_arr[i-1] + y_arr[i]
 
-    dataset = torch.tensor(inverse_transform_sampling(
-        x_arr, cdf_arr, N))
+    if os.path.isfile(ofile_target_sample) and os.path.getsize(ofile_target_sample) > 0:
+        print(f"loading {ofile_target_sample}")
+        with open(ofile_target_sample, 'rb') as f:
+            dataset = pickle.load(f)
+    else:
+        dataset = torch.tensor(inverse_transform_sampling(
+            x_arr, cdf_arr, N))
 
-    pool.apply_async(plot_hist, (dataset, x_arr, y_arr,
-                                 f"{ofile_base}_target.png",
-                                 f"a={a}, b={b}, Ta={Ta}, Tp={Tp}, tau={tau} Target Sample",))
+        pool.apply_async(plot_hist, (dataset, x_arr, y_arr,
+                                     f"{ofile_base}_target.png",
+                                     f"a={a}, b={b}, Ta={Ta}, Tp={Tp}, tau={tau} Target Sample",))
 
-    dataset.reshape((N, 1))
+        dataset.reshape((N, 1))
 
-    with open(f"{ofile_base}_target_sample.pkl", 'wb') as f:
-        pool.apply_async(pickle.dump, (dataset, f,))
+        with open(ofile_target_sample, 'wb') as f:
+            # pool.apply_async(pickle.dump, (dataset, f,))
+            pickle.dump(dataset, f)
 
     # Passive Case numerical
-    all_models_passive = rdn.passive_training(
-        dataset, tsteps, T, dt, nrnodes=4, iterations=500)
 
-    _, samples_passive_numerical = rdn.sampling(
-        N, all_models_passive, T, dt, tsteps)
+    if os.path.isfile(ofile_samples_PN):
+        print(f"loading {ofile_samples_PN}")
+        with open(ofile_samples_PN, 'rb') as f:
+            samples_passive_numerical = pickle.load(f)
+    else:
 
-    with open(f"{ofile_base}_samples_PN.pkl", 'wb') as f:
-        pool.apply_async(pickle.dump, (samples_passive_numerical, f,))
+        all_models_passive = rdn.passive_training(
+            dataset, tsteps, T, dt, nrnodes=4, iterations=500)
 
-    pool.apply_async(plot_hist, (samples_passive_numerical[-1], x_arr, y_arr,
-                                 f"{ofile_base}_samples_PN.png",
-                                 f"a={a}, b={b}, Ta={Ta}, Tp={Tp}, tau={tau} Passive Sample",))
+        _, samples_passive_numerical = rdn.sampling(
+            N, all_models_passive, T, dt, tsteps)
 
-    difflist_passive_numerical = ProcessData.diff_list_multiproc(
-        pool, dataset, samples_passive_numerical, tsteps, xmin=-10, xmax=10, bandwidth=0.2, kernel='gaussian', npoints=1000)
+        with open(ofile_samples_PN, 'wb') as f:
+            # pool.apply_async(pickle.dump, (samples_passive_numerical, f,))
+            pickle.dump(samples_passive_numerical, f)
 
-    with open(f"{ofile_base}_difflist_PN.pkl", 'wb') as f:
-        pool.apply_async(pickle.dump, (difflist_passive_numerical, f,))
+        pool.apply_async(plot_hist, (samples_passive_numerical[-1], x_arr, y_arr,
+                                     f"{ofile_base}_samples_PN.png",
+                                     f"a={a}, b={b}, Ta={Ta}, Tp={Tp}, tau={tau} Passive Sample",))
+
+    if os.path.isfile(ofile_difflist_PN):
+        print(f"loading {ofile_difflist_PN}")
+        with open(ofile_difflist_PN, 'rb') as f:
+            difflist_passive_numerical = pickle.load(f)
+    else:
+        difflist_passive_numerical = ProcessData.diff_list_multiproc(
+            pool, dataset, samples_passive_numerical, tsteps, xmin=-10, xmax=10, bandwidth=0.2, kernel='gaussian', npoints=1000)
+
+        with open(ofile_difflist_PN, 'wb') as f:
+            # pool.apply_async(pickle.dump, (difflist_passive_numerical, f,))
+            pickle.dump(difflist_passive_numerical, f)
 
     # Active Case numerical
-    all_models_x, all_models_eta = rdn.active_training(
-        dataset, tsteps, Tp, Ta, tau, k, dt, nrnodes=4, iterations=500)
+    if os.path.isfile(ofile_samples_AN):
+        print(f"loading {ofile_samples_AN}")
+        with open(ofile_samples_AN, 'rb') as f:
+            samples_active_numerical = pickle.load(f)
+    else:
+        all_models_x, all_models_eta = rdn.active_training(
+            dataset, tsteps, Tp, Ta, tau, k, dt, nrnodes=4, iterations=500)
 
-    _, _, samples_active_numerical, _ = rdn.sampling_active(
-        N, all_models_x, all_models_eta, Tp, Ta, tau, k, dt, tsteps)
+        _, _, samples_active_numerical, _ = rdn.sampling_active(
+            N, all_models_x, all_models_eta, Tp, Ta, tau, k, dt, tsteps)
 
-    with open(f"{ofile_base}_samples_AN.pkl", 'wb') as f:
-        pool.apply_async(pickle.dump(samples_active_numerical, f,))
-
-    difflist_active_numerical = ProcessData.diff_list(
-        dataset, samples_active_numerical, tsteps, xmin=-10, xmax=10, bandwidth=0.2, kernel='gaussian', npoints=1000)
+        with open(ofile_samples_AN, 'wb') as f:
+            # pool.apply_async(pickle.dump(samples_active_numerical, f,))
+            pickle.dump(samples_active_numerical, f)
 
     pool.apply_async(plot_hist, (samples_active_numerical[-1], x_arr, y_arr,
                                  f"{ofile_base}_samples_AN.png",
                                  f"a={a}, b={b}, Ta={Ta}, Tp={Tp}, tau={tau} Active Sample",))
 
-    with open(f"{ofile_base}_difflist_AN.pkl", 'wb') as f:
-        pool.apply_async(pickle.dump, (difflist_active_numerical, f,))
+    if os.path.isfile(ofile_difflist_AN):
+        print(f"loading {ofile_difflist_AN}")
+        with open(ofile_difflist_AN, 'rb') as f:
+            difflist_active_numerical = pickle.load(f)
+    else:
+        difflist_active_numerical = ProcessData.diff_list(
+            dataset, samples_active_numerical, tsteps, xmin=-10, xmax=10, bandwidth=0.2, kernel='gaussian', npoints=1000)
+
+        with open(ofile_difflist_AN, 'wb') as f:
+            # pool.apply_async(pickle.dump, (difflist_active_numerical, f,))
+            pickle.dump(difflist_active_numerical, f)
 
     tlist = np.linspace(dt, tsteps*dt, tsteps-1)
 
@@ -133,13 +172,16 @@ def diffuse_quartic(pool=None, a=None, b=None, c=None, tsteps=None, dt=None,
     pool.apply_async(plot_diff, (difflist_passive_numerical, difflist_active_numerical,
                                  tlist, title, fname,))
 
+    pool.close()
+    pool.join()
+
     print(f"{ofile_base} done")
 
 
 if __name__ == "__main__":
 
-    tsteps = 100  # Number of timesteps for running simulation
-    dt = 0.02  # Timestep size
+    tsteps = 500  # Number of timesteps for running simulation
+    dt = 0.01  # Timestep size
     T = 1.0  # Temperature for passive diffusion
     Tp = 0.5  # Passive Temperature for Active diffusion
     Ta = 0.5  # Active Temperature for Active diffusion
@@ -150,9 +192,9 @@ if __name__ == "__main__":
     # a_list = np.linspace(1, 2, 3)
     # b_list = np.linspace(1, 2, 3)
 
-    a_list = np.linspace(-1, 10, 5)
-    b_list = np.linspace(-100, 100, 5)
-    tau_list = np.linspace(0.01, 1, 5)
+    a_list = [1]
+    b_list = [-500, -300, -200, -100, -50, -10, -5, 0]
+    tau_list = [0.01, 0.02, 0.05]
 
     with Pool(processes=16) as pool:
         for tau in tau_list:
@@ -163,5 +205,11 @@ if __name__ == "__main__":
                     if not os.path.isfile(f"{ofile_base}_diff.png") and (a != 0):
                         c = b**2/(4*a)
 
+                        print(ofile_base)
+
                         diffuse_quartic(pool=pool, a=a, b=b, c=c, tsteps=tsteps, dt=dt,
                                         Tp=Tp, Ta=Ta, tau=tau, k=1, N=N)
+
+                        print()
+
+                        exit()
