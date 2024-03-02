@@ -24,7 +24,7 @@ from multiprocess import Pool
 def plot_hist(samples, x_arr, y_arr, png_fname, hist_fname, title):
     fig, ax = plt.subplots()
     hist, bins, _, = ax.hist(samples, bins=100, density=True)
-    ax.plot(x_arr, y_arr*1000, color='orange', alpha=0.50)
+    ax.plot(x_arr, y_arr*5000, color='orange', alpha=0.50)
     ax.set_title(title)
 
     plt.savefig(png_fname)
@@ -79,14 +79,18 @@ def diffuse_quartic(pool=None, a=None, b=None, c=None, tsteps=None, dt=None,
 
     ofile_difflist = f"{ofile_base}_difflist_compare.pkl"
 
-    n = 50000
-    x_arr = np.linspace(-20, 20, n)
-    y_arr = a*x_arr**4 + b*x_arr**2 + c
+    xmin = -2*np.sqrt(abs(b/a))
+    xmax = 2*np.sqrt(abs(b/a))
 
-    y_arr_u = y_arr
+    n = 50000
+    x_arr = np.linspace(xmin, xmax, n)
+    y_arr = -(a*x_arr**4 + b*x_arr**2)
+
+    y_arr -= np.min(y_arr)
+    y_arr = y_arr/(np.sum(y_arr))
 
     y_arr[0] = 0
-    y_arr = y_arr/(np.sum(y_arr))
+
     cdf_arr = 0*y_arr
 
     for i in range(1, n, 1):
@@ -195,8 +199,12 @@ if __name__ == "__main__":
     # a_list = np.linspace(1, 2, 3)
     # b_list = np.linspace(1, 2, 3)
 
+    # a_list = [1]
+    # b_list = [-500, -300, -200, -100, -50, -10, -5, 0]
+    # tau_list = [0.01, 0.02, 0.05]
+
     a_list = [1]
-    b_list = [-500, -300, -200, -100, -50, -10, -5, 0]
+    b_list = [-5, -10, -20, -50]
     tau_list = [0.01, 0.02, 0.05]
 
     with Pool(processes=16) as pool:
@@ -231,30 +239,32 @@ if __name__ == "__main__":
                     pngfile_samples_AN = f"{ofile_base}_samples_AN.png"
                     histfile_samples_AN = f"{ofile_base}_samples_AN_hist.pkl"
 
+                    xmin = -2*np.sqrt(abs(b/a))
+                    xmax = 2*np.sqrt(abs(b/a))
+
                     n = 50000
-                    x_arr = np.linspace(-20, 20, n)
-                    y_arr = a*x_arr**4 + b*x_arr**2 + c
+                    x_arr = np.linspace(xmin, xmax, n)
+                    y_arr = -(a*x_arr**4 + b*x_arr**2)
 
-                    y_arr_u = y_arr
-
-                    y_arr[0] = 0
+                    y_arr -= np.min(y_arr)
                     y_arr = y_arr/(np.sum(y_arr))
 
-                    if (os.path.isfile(ofile_samples_PN) and (not os.isfile(pngfile_samples_PN))):
+                    if (os.path.isfile(ofile_samples_PN) and (not os.path.isfile(pngfile_samples_PN))):
+
                         with open(ofile_samples_PN, 'rb') as f:
                             samples_PN = pickle.load(f)
 
-                        pool.apply_async(plot_hist, (samples_PN[-1].reshape(N), x_arr, y_arr,
-                                                     pngfile_samples_PN, histfile_samples_PN,
-                                                     f"a={a}, b={b}, Ta={Ta}, Tp={Tp}, tau={tau} Passive Sample",))
+                            pool.apply_async(plot_hist, (samples_PN[-1].reshape(N), x_arr, y_arr,
+                                                         pngfile_samples_PN, histfile_samples_PN,
+                                                         f"a={a}, b={b}, Ta={Ta}, Tp={Tp}, tau={tau} Passive Sample",))
 
-                    if (os.path.isfile(ofile_samples_AN) and (not os.isfile(pngfile_samples_AN))):
+                    if (os.path.isfile(ofile_samples_AN) and (not os.path.isfile(pngfile_samples_AN))):
                         with open(ofile_samples_AN, 'rb') as f:
-                            samples_PN = pickle.load(f)
+                            samples_AN = pickle.load(f)
 
-                        pool.apply_async(plot_hist, (samples_AN[-1].reshape(N), x_arr, y_arr,
-                                                     pngfile_samples_AN, histfile_samples_AN,
-                                                     f"a={a}, b={b}, Ta={Ta}, Tp={Tp}, tau={tau} Passive Sample",))
+                            pool.apply_async(plot_hist, (samples_AN[-1].reshape(N), x_arr, y_arr,
+                                                         pngfile_samples_AN, histfile_samples_AN,
+                                                         f"a={a}, b={b}, Ta={Ta}, Tp={Tp}, tau={tau} Passive Sample",))
 
         pool.close()
         pool.join()
