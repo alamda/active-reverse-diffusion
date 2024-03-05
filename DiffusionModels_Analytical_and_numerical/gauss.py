@@ -38,16 +38,20 @@ if __name__ == "__main__":
                         xmin = -(mu+2*sigma)
                         xmax = mu+2*sigma
 
+                        range_tuple = (xmin, xmax)
+
                         dataset = generate_double_gaussian_target(
                             ofile_base, N, mu_list, sigma_list, pi_list, plot_title="")
+
+                        plot_hist(dataset.reshape(N),
+                                  pngfile_samples_PN, histfile_samples_PN,
+                                  title_str, range_tuple)
 
                         with Pool(processes=16) as pool:
                             diffuse(pool=pool, ofile_base=ofile_base, dataset=dataset, tsteps=tsteps,
                                     dt=dt, Tp=Tp, Ta=Ta, tau=tau, k=1, N=N, xmin=xmin, xmax=xmax, title_str=title_str)
 
                         print()
-
-                        exit()
 
     with Pool(processes=16) as pool:
         for tau in tau_list:
