@@ -1,3 +1,5 @@
+from multiprocess import Pool
+
 import numpy as np
 import torch
 import seaborn as sns
@@ -18,7 +20,6 @@ from itertools import permutations
 import scipy.interpolate
 
 import os
-from multiprocess import Pool
 
 
 def plot_hist(samples, png_fname, hist_fname, title):

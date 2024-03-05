@@ -1,7 +1,7 @@
-from diffusion_test import *
-
 import os
 from multiprocess import Pool
+
+from diffusion_test import *
 
 if __name__ == "__main__":
 
