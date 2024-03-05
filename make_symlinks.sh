@@ -1,9 +1,10 @@
 #!/bin/sh
 
-[ ! -d target ] && mkdir target || rm -rf target/*
-[ ! -d diff ] && mkdir diff || rm -rf diff/*
-[ ! -d samples_PN ] && mkdir samples_PN || rm -rf samples_PN/*
-[ ! -d samples_AN ] && mkdir samples_AN || rm -rf samples_AN/*
+[ ! -d target ] && mkdir target ; rm -rf target/*
+[ ! -d diff ] && mkdir diff ; rm -rf diff/*
+[ ! -d samples_PN ] && mkdir samples_PN ; rm -rf samples_PN/*
+[ ! -d samples_AN ] && mkdir samples_AN ; rm -rf samples_AN/*
+
 
 for img in `find . -name "*_target*.png"` ; 
 do
