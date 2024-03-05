@@ -165,10 +165,10 @@ def diffuse(pool=None, ofile_base=None, dataset=None, tsteps=None, dt=None, Tp=N
     else:
 
         all_models_passive = rdn.passive_training(
-            dataset, tsteps, T, dt, nrnodes=4, iterations=500)
+            dataset, tsteps, Tp, dt, nrnodes=4, iterations=500)
 
         _, samples_passive_numerical = rdn.sampling(
-            N, all_models_passive, T, dt, tsteps)
+            N, all_models_passive, Tp, dt, tsteps)
 
         with open(ofile_samples_PN, 'wb') as f:
             pickle.dump(samples_passive_numerical, f)
