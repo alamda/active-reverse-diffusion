@@ -1,7 +1,9 @@
 import os
+import pickle
+import numpy as np
 from multiprocess import Pool
 
-from diffusion_test import *
+from diffusion_test import generate_double_gaussian_target, diffuse, plot_hist, plot_calculated_hist
 
 
 if __name__ == "__main__":
@@ -75,6 +77,8 @@ if __name__ == "__main__":
                             else:
                                 with open(ofile_samples_PN, 'rb') as f:
                                     samples_PN = pickle.load(f)
+
+                                    breakpoint()
 
                                     pool.apply_async(plot_hist, (samples_PN[-1].reshape(N),
                                                                  pngfile_samples_PN, histfile_samples_PN,

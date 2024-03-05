@@ -1,7 +1,9 @@
 import os
+import pickle
+import numpy as np
 from multiprocess import Pool
 
-from diffusion_test import *
+from diffusion_test import generate_quartic_target, diffuse, plot_hist, plot_calculated_hist
 
 if __name__ == "__main__":
 
