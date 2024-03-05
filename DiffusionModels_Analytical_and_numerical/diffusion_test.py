@@ -22,9 +22,10 @@ import scipy.interpolate
 import os
 
 
-def plot_hist(samples, png_fname, hist_fname, title):
+def plot_hist(samples, png_fname, hist_fname, title, range_tuple):
     fig, ax = plt.subplots(figsize=(5, 5))
-    hist, bins, _, = ax.hist(samples, bins=100, density=True, alpha=0.8)
+    hist, bins, _, = ax.hist(
+        samples, bins=100, density=True, alpha=0.8, range=range_tuple)
     ax.set_title(title)
 
     plt.savefig(png_fname)

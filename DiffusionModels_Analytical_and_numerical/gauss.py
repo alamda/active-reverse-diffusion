@@ -65,6 +65,11 @@ if __name__ == "__main__":
                         pngfile_samples_AN = f"{ofile_base}_samples_AN.png"
                         histfile_samples_AN = f"{ofile_base}_samples_AN_hist.pkl"
 
+                        xmin = -(mu+2*sigma)
+                        xmax = mu+2*sigma
+
+                        range_tuple = (xmin, xmax)
+
                         if os.path.isfile(ofile_samples_PN):
 
                             if os.path.isfile(histfile_samples_PN):
@@ -78,11 +83,9 @@ if __name__ == "__main__":
                                 with open(ofile_samples_PN, 'rb') as f:
                                     samples_PN = pickle.load(f)
 
-                                    breakpoint()
-
                                     pool.apply_async(plot_hist, (samples_PN[-1].reshape(N),
                                                                  pngfile_samples_PN, histfile_samples_PN,
-                                                                 title,))
+                                                                 title, range_tuple))
 
                         if os.path.isfile(ofile_samples_AN):
 
@@ -99,4 +102,4 @@ if __name__ == "__main__":
 
                                     pool.apply_async(plot_hist, (samples_AN[-1].reshape(N),
                                                                  pngfile_samples_AN, histfile_samples_AN,
-                                                                 title,))
+                                                                 title, range_tuple))

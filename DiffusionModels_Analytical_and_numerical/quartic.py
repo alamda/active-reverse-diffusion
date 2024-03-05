@@ -65,6 +65,8 @@ if __name__ == "__main__":
                     xmin = -2*np.sqrt(abs(b/a))
                     xmax = 2*np.sqrt(abs(b/a))
 
+                    range_tuple = (xmin, xmax)
+
                     n = 50000
                     x_arr = np.linspace(xmin, xmax, n)
                     y_arr = -(a*x_arr**4 + b*x_arr**2)
@@ -89,7 +91,7 @@ if __name__ == "__main__":
 
                                 pool.apply_async(plot_hist, (samples_PN[-1].reshape(N),
                                                              pngfile_samples_PN, histfile_samples_PN,
-                                                             title,))
+                                                             title, range_tuple))
 
                     if os.path.isfile(ofile_samples_AN):
 
@@ -108,4 +110,4 @@ if __name__ == "__main__":
 
                                 pool.apply_async(plot_hist, (samples_AN[-1].reshape(N),
                                                              pngfile_samples_AN, histfile_samples_AN,
-                                                             title,))
+                                                             title, range_tuple))
