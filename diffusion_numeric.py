@@ -4,10 +4,12 @@ from tqdm.auto import tqdm
 import itertools
 import copy
 
+from multiprocess import Pool
+
 
 class DiffusionNumeric:
     def __init__(self, ofile_base="", passive_noise=None, active_noise=None, target=None,
-                 num_diffusion_steps=None, dt=None, k=1, sample_dim=None):
+                 num_diffusion_steps=None, dt=None, k=1, sample_dim=None, data_proc=None):
         self.ofile_base = ofile_base
 
         self.passive_noise = passive_noise
@@ -22,6 +24,19 @@ class DiffusionNumeric:
 
         self.sample_dim = sample_dim
 
+        self.data_proc = data_proc
+
+        self.passive_forward_samples = None
+        self.passive_models = None
+        self.passive_reverse_samples = None
+        self.passive_diff_list = None
+
+        self.active_forward_samples_x = None
+        self.active_forward_samples_eta = None
+        self.active_reverse_samples_x = None
+        self.active_reverse_samples_eta = None
+        self.active_diff_list = None
+
     def forward_diffusion_passive(self):
         forward_diffusion_sample_list = [self.target.sample]
 
@@ -35,6 +50,8 @@ class DiffusionNumeric:
                              )
 
             forward_diffusion_sample_list.append(x_t)
+
+        self.passive_forward_samples = forward_diffusion_sample_list
 
         return forward_diffusion_sample_list
 
@@ -96,9 +113,15 @@ class DiffusionNumeric:
 
             t_idx += 1
 
+        self.passive_models = all_models
+
         return all_models
 
-    def sample_from_diffusion_passive(self, all_models):
+    def sample_from_diffusion_passive(self, all_models=None):
+
+        if all_models is None:
+            all_models = self.passive_models
+
         x_t = self.passive_noise.temperature * \
             torch.randn(self.sample_dim, 1).type(torch.DoubleTensor)
 
@@ -114,6 +137,8 @@ class DiffusionNumeric:
                 torch.randn(self.sample_dim, 1)
 
             samples.append(x_t.detach())
+
+        self.passive_reverse_samples = samples
 
         return x_t.detach(), samples
 
@@ -140,6 +165,9 @@ class DiffusionNumeric:
 
             samples.append(x_t)
             eta_samples.append(eta)
+
+        self.active_forward_samples_x = samples
+        self.active_forward_samples_eta = eta_samples
 
         return samples, eta_samples
 
@@ -271,9 +299,17 @@ class DiffusionNumeric:
 
             t_idx += 1
 
+        self.active_models_x = all_models_x
+        self.active_models_eta = all_models_eta
+
         return all_models_x, all_models_eta
 
-    def sample_from_diffusion_active(self, all_models_x, all_models_eta):
+    def sample_from_diffusion_active(self, all_models_x=None, all_models_eta=None):
+        if all_models_x is None:
+            all_models_x = self.active_models_x
+        if all_models_eta is None:
+            all_models_eta = self.active_models_eta
+
         x = np.sqrt(self.passive_noise.temperature/self.k + (self.active_noise.temperature /
                                                              (self.k**2 * self.active_noise.correlation_time + self.k)
                                                              )
@@ -304,4 +340,31 @@ class DiffusionNumeric:
             samples_x.append(x.detach())
             samples_eta.append(eta.detach())
 
+        self.active_reverse_samples_x = samples_x
+        self.active_reverse_samples_eta = samples_eta
+
         return x.detach(), eta.detach(), samples_x, samples_eta
+
+    def calculate_passive_diff_list(self, multiproc=True):
+        if self.data_proc is not None:
+            if multiproc == True:
+                with Pool() as pool:
+                    self.passive_diff_list = \
+                        self.data_proc.calc_diff_vs_t_multiproc(self.target.sample,
+                                                                self.passive_reverse_samples,
+                                                                pool=pool)
+            else:
+                self.data_proc.calc_diff_vs_t(self.target.sample,
+                                              self.passive_reverse_samples)
+
+    def calculate_active_diff_list(self, multiproc=True):
+        if self.data_proc is not None:
+            if multiproc == True:
+                with Pool() as pool:
+                    self.active_diff_list = \
+                        self.data_proc.calc_diff_vs_t_multiproc(self.target.sample,
+                                                                self.active_reverse_samples_x,
+                                                                pool=pool)
+            else:
+                self.data_proc.calc_diff_vs_t(self.target.sample,
+                                              self.active_reverse_samples_x)

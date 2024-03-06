@@ -2,6 +2,7 @@ from diffusion_numeric import DiffusionNumeric
 from noise_passive import NoisePassive
 from noise_active import NoiseActive
 from target_multi_gaussian import TargetMultiGaussian
+from data_proc import DataProc
 
 import torch
 
@@ -20,6 +21,9 @@ class DiffusionNumericTest_Factory:
     sigma_list = [0.5, 0.5, 0.5]
     pi_list = [1.0, 1.0, 1.0]
 
+    xmin = -5
+    xmax = 5
+
     def create_test_objects(self):
         myPassiveNoise = NoisePassive(T=self.T_passive,
                                       dim=self.sample_dim)
@@ -33,13 +37,16 @@ class DiffusionNumericTest_Factory:
                                        pi_list=self.pi_list,
                                        dim=self.sample_dim)
 
+        myDataProc = DataProc(xmin=self.xmin, xmax=self.xmax)
+
         myDiffNum = DiffusionNumeric(ofile_base=self.ofile_base,
                                      passive_noise=myPassiveNoise,
                                      active_noise=myActiveNoise,
                                      target=myTarget,
                                      num_diffusion_steps=self.num_diffusion_steps,
                                      dt=self.dt,
-                                     sample_dim=self.sample_dim)
+                                     sample_dim=self.sample_dim,
+                                     data_proc=myDataProc)
 
         return myDiffNum
 
@@ -258,3 +265,75 @@ def test_sample_from_diffusion_active():
     for sample_t in reverse_diffusion_active_samples_eta:
         assert isinstance(sample_t, torch.Tensor)
         assert sample_t.shape == torch.Size([myFactory.sample_dim, 1])
+
+
+def test_passive_and_active_diffusion():
+    myFactory = DiffusionNumericTest_Factory()
+    myDiffNum = myFactory.create_test_objects()
+
+    myDiffNum.train_diffusion_passive()
+    myDiffNum.sample_from_diffusion_passive()
+    myDiffNum.calculate_passive_diff_list()
+
+    myDiffNum.train_diffusion_active()
+    myDiffNum.sample_from_diffusion_active()
+    myDiffNum.calculate_active_diff_list()
+
+    # Passive
+    assert isinstance(myDiffNum.passive_forward_samples, list)
+    assert len(
+        myDiffNum.passive_forward_samples) == myFactory.num_diffusion_steps + 1
+
+    for sample in myDiffNum.passive_forward_samples:
+        assert isinstance(sample, torch.Tensor)
+        assert sample.shape == torch.Size([myFactory.sample_dim, 1])
+
+    assert isinstance(myDiffNum.passive_models, list)
+    assert len(myDiffNum.passive_models) == myFactory.num_diffusion_steps - 1
+
+    assert isinstance(myDiffNum.passive_reverse_samples, list)
+    assert len(
+        myDiffNum.passive_reverse_samples) == myFactory.num_diffusion_steps - 1
+
+    assert isinstance(myDiffNum.passive_diff_list, list)
+    assert len(myDiffNum.passive_diff_list) == \
+        len(myDiffNum.passive_reverse_samples) - 1
+    assert len(myDiffNum.passive_diff_list) == myFactory.num_diffusion_steps - 2
+
+    # Active x
+    assert isinstance(myDiffNum.active_forward_samples_x, list)
+    assert len(
+        myDiffNum.active_forward_samples_x) == myFactory.num_diffusion_steps + 1
+
+    for sample in myDiffNum.active_forward_samples_x:
+        assert isinstance(sample, torch.Tensor)
+        assert sample.shape == torch.Size([myFactory.sample_dim, 1])
+
+    assert isinstance(myDiffNum.active_models_x, list)
+    assert len(myDiffNum.active_models_x) == myFactory.num_diffusion_steps - 1
+
+    assert isinstance(myDiffNum.active_reverse_samples_x, list)
+    assert len(
+        myDiffNum.active_reverse_samples_x) == myFactory.num_diffusion_steps - 1
+
+    # Active eta
+    assert isinstance(myDiffNum.active_forward_samples_eta, list)
+    assert len(
+        myDiffNum.active_forward_samples_eta) == myFactory.num_diffusion_steps + 1
+
+    for sample in myDiffNum.active_forward_samples_eta:
+        assert isinstance(sample, torch.Tensor)
+        assert sample.shape == torch.Size([myFactory.sample_dim, 1])
+
+    assert isinstance(myDiffNum.active_models_eta, list)
+    assert len(myDiffNum.active_models_eta) == myFactory.num_diffusion_steps - 1
+
+    assert isinstance(myDiffNum.active_reverse_samples_eta, list)
+    assert len(
+        myDiffNum.active_reverse_samples_eta) == myFactory.num_diffusion_steps - 1
+
+    # Active difflist (for x)
+    assert isinstance(myDiffNum.active_diff_list, list)
+    assert len(myDiffNum.active_diff_list) == \
+        len(myDiffNum.active_reverse_samples_x) - 1
+    assert len(myDiffNum.active_diff_list) == myFactory.num_diffusion_steps - 2
