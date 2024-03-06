@@ -38,5 +38,3 @@ if __name__ == "__main__":
     myActiveNoise = NoiseActive(T=T, tau=tau, dim=dim)
 
     myActiveNoise.update(dt=dt)
-
-    del myActiveNoise

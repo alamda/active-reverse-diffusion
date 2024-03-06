@@ -24,5 +24,3 @@ if __name__ == "__main__":
     myPassiveNoise.initialize_noise(dt=dt)
 
     print(myPassiveNoise.generate_noise(dt=dt))
-
-    del myPassiveNoise
