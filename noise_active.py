@@ -8,6 +8,9 @@ class NoiseActive(NoiseAbstract):
 
         self.check_correlation_time()
 
+    def initialize_noise(self):
+        pass
+
     def check_correlation_time(self):
         try:
             if self.correlation_time is None:
