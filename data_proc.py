@@ -76,6 +76,7 @@ class DataProc():
 
     def calc_diff_vs_t_multiproc(self, target_sample, diffusion_sample_list, pool=None):
         if pool is not None:
+            print("Calculating KL divergences with multiprocessing enabled")
             proc_list = []
 
             diff_list = []
@@ -83,9 +84,10 @@ class DataProc():
             num_diffusion_steps = len(diffusion_sample_list)
 
             for t_idx in range(num_diffusion_steps - 1):
-                print("Calculating KL divergences with multiprocessing enabled")
+
                 proc = pool.apply_async(self.calc_KL_divergence,
                                         (target_sample, diffusion_sample_list[t_idx]))
+
                 proc_list.append(proc)
 
             for proc in proc_list:
@@ -95,4 +97,5 @@ class DataProc():
         else:
             print(
                 "No pool object provided, not using multiprocessing to calculate KL divergences")
+
             return self.calc_diff_vs_t(target_sample, diffusion_sample_list)
