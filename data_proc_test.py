@@ -6,6 +6,8 @@ from target_multi_gaussian import TargetMultiGaussian
 
 import numpy as np
 
+from multiprocess import Pool
+
 
 class DataProcTest_Factory:
     sample_dim = 100
@@ -101,6 +103,24 @@ def test_calc_diff_vs_t():
 
     difflist = myDataProc.calc_diff_vs_t(
         myFactory.myDiffNum.target.sample, reverse_diffusion_passive_samples)
+
+    assert len(difflist) == len(reverse_diffusion_passive_samples) - 1
+    assert len(difflist) == myFactory.num_diffusion_steps - 2
+
+
+def test_calc_diff_vs_t_multiproc():
+    myFactory = DataProcTest_Factory()
+    myDataProc = myFactory.create_test_object()
+
+    passive_models = myFactory.myDiffNum.train_diffusion_passive(iterations=10)
+
+    x, reverse_diffusion_passive_samples = myFactory.myDiffNum.sample_from_diffusion_passive(
+        passive_models)
+
+    with Pool(processes=4) as pool:
+        difflist = myDataProc.calc_diff_vs_t_multiproc(myFactory.myDiffNum.target.sample,
+                                                       reverse_diffusion_passive_samples,
+                                                       pool=pool)
 
     assert len(difflist) == len(reverse_diffusion_passive_samples) - 1
     assert len(difflist) == myFactory.num_diffusion_steps - 2
