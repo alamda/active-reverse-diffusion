@@ -4,6 +4,7 @@ from tqdm.auto import tqdm
 import itertools
 import copy
 
+import multiprocess
 from multiprocess import Pool
 
 
@@ -360,7 +361,11 @@ class DiffusionNumeric:
     def calculate_active_diff_list(self, multiproc=True):
         if self.data_proc is not None:
             if multiproc == True:
-                with Pool() as pool:
+                
+                num_cpus = multiprocess.cpu_count()
+                num_procs = num_cpus - 4
+
+                with Pool(processes=num_procs) as pool:
                     self.active_diff_list = \
                         self.data_proc.calc_diff_vs_t_multiproc(self.target.sample,
                                                                 self.active_reverse_samples_x,

@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.neighbors import KernelDensity
 import torch
 import scipy.special as special
+import tqdm
 
 
 class DataProc():
@@ -63,11 +64,13 @@ class DataProc():
 
         num_diffusion_steps = len(diffusion_sample_list)
 
-        for t_idx in range(0, num_diffusion_steps-1):
-            diff = self.calc_KL_divergence(target_sample,
-                                           diffusion_sample_list[t_idx])
-            t_list.append(t_idx)
-            diff_list.append(diff)
+        with tqdm.tqdm(total=len(proc_list)) as pbar:
+            for t_idx in range(0, num_diffusion_steps-1):
+                diff = self.calc_KL_divergence(target_sample,
+                                            diffusion_sample_list[t_idx])
+                t_list.append(t_idx)
+                diff_list.append(diff)
+                pbar.update()
 
         self.t_list = t_list
         self.diff_list = diff_list
@@ -90,8 +93,10 @@ class DataProc():
 
                 proc_list.append(proc)
 
-            for proc in proc_list:
-                diff_list.append(proc.get())
+            with tqdm.tqdm(total=len(proc_list)) as pbar:
+                for proc in proc_list:
+                    diff_list.append(proc.get())
+                    pbar.update()
 
             return diff_list
         else:
