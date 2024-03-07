@@ -7,18 +7,19 @@ from data_proc import DataProc
 import pickle
 
 if __name__ == "__main__":
-    sample_dim = 1000
-    ofile_base = "abc"
-    num_diffusion_steps = 100
-    dt = 0.01
+    ofile_base = "data"
 
-    T_passive = 0.5
-    T_active = 0.5
-    tau = 0.1
+    sample_dim = 80000
+    num_diffusion_steps = 160
+    dt = 0.005
 
-    mu_list = [-2.0, 0.0, 2.0]
-    sigma_list = [0.5, 0.5, 0.5]
-    pi_list = [1.0, 1.0, 1.0]
+    T_passive = 1
+    T_active = 1
+    tau = 0.25
+
+    mu_list = [-1.2, 1.2]
+    sigma_list = [1.0, 1.0]
+    pi_list = [1.0, 1.0]
 
     xmin = -5
     xmax = 5
@@ -48,13 +49,13 @@ if __name__ == "__main__":
 
     myDiffNum.train_diffusion_passive()
     myDiffNum.sample_from_diffusion_passive()
-    myDiffNum.calculate_passive_diff_list()
+    # myDiffNum.calculate_passive_diff_list()
+
+    myDiffNum.passive_noise.temperature = 0.0
 
     myDiffNum.train_diffusion_active()
     myDiffNum.sample_from_diffusion_active()
-    myDiffNum.calculate_active_diff_list()
+    # myDiffNum.calculate_active_diff_list()
 
     with open(f"{ofile_base}.pkl", 'wb') as f:
         pickle.dump(myDiffNum, f)
-
-    breakpoint()

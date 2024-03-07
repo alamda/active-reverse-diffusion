@@ -4,6 +4,7 @@ dsns.png
 multi_gauss_target_example.png
 quartic_target_example.png
 *.pkl
+runs/
 
 *.dot
 abstract_classes/*.dot
