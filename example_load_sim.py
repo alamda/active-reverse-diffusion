@@ -3,6 +3,34 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import multiprocess
+from multiprocess import Pool
+import tqdm
+
+
+def plot_hist(passive_sample, active_sample, target_sample,
+              num_hist_bins, xmin, xmax,
+              png_fname):
+    fig, ax = plt.subplots()
+
+    hist, bins, _ = ax.hist((passive_sample, active_sample, target_sample_array),
+                            bins=num_hist_bins,
+                            density=True,
+                            label=['passive', 'active', 'target'],
+                            histtype='step',
+                            fill=False,
+                            alpha=1,
+                            range=(xmin, xmax))
+
+    ax.set_ylim(top=0.5)
+
+    ax.legend()
+
+    plt.savefig(png_fname)
+    plt.close(fig)
+
+    return
+
 
 if __name__ == "__main__":
     fname = "data.pkl"
@@ -19,28 +47,36 @@ if __name__ == "__main__":
     hist_max = 0
 
     target_sample = mydiff.target.sample.flatten()
+    target_sample_array = target_sample.reshape(target_sample.shape[0])
 
     num_steps = len(mydiff.passive_reverse_samples)
 
-    for idx in range(num_steps):
-        fig, ax = plt.subplots()
+    num_cpus = multiprocess.cpu_count()
+    num_procs = num_cpus - 4
 
-        passive_sample = mydiff.passive_reverse_samples[idx].flatten()
-        active_sample = mydiff.active_reverse_samples_x[idx].flatten()
+    with Pool(processes=num_procs) as pool:
+        proc_list = []
+        result_list = []
 
-        hist, bins, _ = ax.hist((passive_sample, active_sample, target_sample),
-                                bins=num_hist_bins,
-                                density=True,
-                                label=['passive', 'active', 'target'],
-                                histtype='step',
-                                fill=False,
-                                alpha=1,
-                                range=(xmin, xmax))
+        for idx in range(num_steps):
+            png_fname = f"hist{str(idx).zfill(3)}.png"
 
-        ax.set_ylim(top=0.5)
+            passive_sample = mydiff.passive_reverse_samples[idx].flatten()
+            passive_sample = passive_sample.reshape(passive_sample.shape[0])
 
-        plt.savefig(f"hist{str(idx).zfill(3)}.png")
-        plt.close(fig)
+            active_sample = mydiff.active_reverse_samples_x[idx].flatten()
+            active_sample = active_sample.reshape(active_sample.shape[0])
+
+            proc = pool.apply_async(plot_hist, (passive_sample, active_sample,
+                                    target_sample_array, num_hist_bins, xmin, xmax, png_fname))
+
+            proc_list.append(proc)
+
+        print("Plotting histograms for each diffusion time step")
+        with tqdm.tqdm(total=len(proc_list)) as pbar:
+            for proc in proc_list:
+                result_list.append(proc.get())
+                pbar.update()
 
     ###
     fig, ax = plt.subplots()
