@@ -94,8 +94,15 @@ if __name__ == "__main__":
 
     if mydiff.passive_diff_list is None:
         mydiff.calculate_passive_diff_list()
+
+        with open(fname, 'wb') as f:
+            pickle.dump(mydiff, f)
+
     if mydiff.active_diff_list is None:
         mydiff.calculate_active_diff_list()
+
+        with open(fname, 'wb') as f:
+            pickle.dump(mydiff, f)
 
     passive_diff_list = mydiff.passive_diff_list
     active_diff_list = mydiff.active_diff_list
