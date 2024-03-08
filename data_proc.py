@@ -67,7 +67,7 @@ class DataProc():
         with tqdm.tqdm(total=len(proc_list)) as pbar:
             for t_idx in range(0, num_diffusion_steps-1):
                 diff = self.calc_KL_divergence(target_sample,
-                                            diffusion_sample_list[t_idx])
+                                               diffusion_sample_list[t_idx])
                 t_list.append(t_idx)
                 diff_list.append(diff)
                 pbar.update()
