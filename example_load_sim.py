@@ -134,26 +134,24 @@ if __name__ == "__main__":
 
     fig, ax = plt.subplots()
 
-    if mydiff.passive_diff_list is None:
-        mydiff.calculate_passive_diff_list()
+    mydiff.data_proc.num_hist_bins = 20
 
-        with open(fname, 'wb') as f:
-            pickle.dump(mydiff, f)
+    mydiff.calculate_passive_diff_list()
+    mydiff.calculate_active_diff_list()
 
-    if mydiff.active_diff_list is None:
-        mydiff.calculate_active_diff_list()
-
-        with open(fname, 'wb') as f:
-            pickle.dump(mydiff, f)
+    t_list = np.arange(0, (mydiff.num_diffusion_steps-2)*mydiff.dt, mydiff.dt)
 
     passive_diff_list = mydiff.passive_diff_list
     active_diff_list = mydiff.active_diff_list
 
+    with open(fname, 'wb') as f:
+        pickle.dump(mydiff, f)
+
     ax.set_xlabel("Time")
     ax.set_ylabel("Log(KL-Divergence)")
 
-    ax.plot(np.log(passive_diff_list), label="passive")
-    ax.plot(np.log(active_diff_list), label="active")
+    ax.plot(t_list, np.log(passive_diff_list), label="passive")
+    ax.plot(t_list, np.log(active_diff_list), label="active")
 
     ax.legend()
 
