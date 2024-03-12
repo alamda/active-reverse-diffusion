@@ -79,82 +79,82 @@ if __name__ == "__main__":
         with open(fname, 'rb') as f:
             mydiff = pickle.load(f)
 
-    num_hist_bins = 100
+        num_hist_bins = 100
 
-    if False:
-        make_movie(sim_object=mydiff, num_hist_bins=20)
+        if False:
+            make_movie(sim_object=mydiff, num_hist_bins=20)
 
-    ###
-    fig, ax = plt.subplots()
+        ###
+        fig, ax = plt.subplots()
 
-    ax.set_title("samples before diffusion")
+        ax.set_title("samples before diffusion")
 
-    target_sample = mydiff.target.sample.flatten()
-    passive_sample = mydiff.passive_reverse_samples[0].flatten()
-    active_sample = mydiff.active_reverse_samples_x[0].flatten()
+        target_sample = mydiff.target.sample.flatten()
+        passive_sample = mydiff.passive_reverse_samples[0].flatten()
+        active_sample = mydiff.active_reverse_samples_x[0].flatten()
 
-    hist, bins, _ = ax.hist((passive_sample, active_sample, target_sample),
-                            bins=num_hist_bins,
-                            density=True,
-                            label=['passive', 'active', 'target'],
-                            histtype='step',
-                            fill=False,
-                            alpha=1)
+        hist, bins, _ = ax.hist((passive_sample, active_sample, target_sample),
+                                bins=num_hist_bins,
+                                density=True,
+                                label=['passive', 'active', 'target'],
+                                histtype='step',
+                                fill=False,
+                                alpha=1)
 
-    new_bins = (bins[1:] + bins[:-1])/2
+        new_bins = (bins[1:] + bins[:-1])/2
 
-    ax.legend()
+        ax.legend()
 
-    plt.savefig("0hist.png")
-    plt.close(fig)
+        plt.savefig("0hist.png")
+        plt.close(fig)
 
-    fig, ax = plt.subplots()
+        fig, ax = plt.subplots()
 
-    ax.set_title("samples after diffusion")
+        ax.set_title("samples after diffusion")
 
-    target_sample = mydiff.target.sample.flatten()
-    passive_sample = mydiff.passive_reverse_samples[-1].flatten()
-    active_sample = mydiff.active_reverse_samples_x[-1].flatten()
+        target_sample = mydiff.target.sample.flatten()
+        passive_sample = mydiff.passive_reverse_samples[-1].flatten()
+        active_sample = mydiff.active_reverse_samples_x[-1].flatten()
 
-    hist, bins, _ = ax.hist((passive_sample, active_sample, target_sample),
-                            bins=num_hist_bins,
-                            density=True,
-                            label=['passive', 'active', 'target'],
-                            histtype='step',
-                            fill=False,
-                            alpha=1)
+        hist, bins, _ = ax.hist((passive_sample, active_sample, target_sample),
+                                bins=num_hist_bins,
+                                density=True,
+                                label=['passive', 'active', 'target'],
+                                histtype='step',
+                                fill=False,
+                                alpha=1)
 
-    new_bins = (bins[1:] + bins[:-1])/2
+        new_bins = (bins[1:] + bins[:-1])/2
 
-    ax.legend()
+        ax.legend()
 
-    plt.savefig("hist.png")
+        plt.savefig("hist.png")
 
-    plt.close(fig)
+        plt.close(fig)
 
-    fig, ax = plt.subplots()
+        fig, ax = plt.subplots()
 
-    mydiff.data_proc.num_hist_bins = 20
+        mydiff.data_proc.num_hist_bins = 20
 
-    mydiff.calculate_passive_diff_list()
-    mydiff.calculate_active_diff_list()
+        mydiff.calculate_passive_diff_list()
+        mydiff.calculate_active_diff_list()
 
-    t_list = np.arange(0, (mydiff.num_diffusion_steps-2)*mydiff.dt, mydiff.dt)
+        passive_diff_list = mydiff.passive_diff_list
+        active_diff_list = mydiff.active_diff_list
 
-    passive_diff_list = mydiff.passive_diff_list
-    active_diff_list = mydiff.active_diff_list
+        t_list = np.arange(0, len(passive_diff_list))*mydiff.dt
 
-    with open(fname, 'wb') as f:
-        pickle.dump(mydiff, f)
+        with open(fname, 'wb') as f:
+            pickle.dump(mydiff, f)
 
-    ax.set_xlabel("Time")
-    ax.set_ylabel("Log(KL-Divergence)")
+        ax.set_xlabel("Time")
+        ax.set_ylabel("Log(KL-Divergence)")
 
-    ax.plot(t_list, np.log(passive_diff_list), label="passive")
-    ax.plot(t_list, np.log(active_diff_list), label="active")
+        ax.plot(t_list, np.log(passive_diff_list), label="passive")
+        ax.plot(t_list, np.log(active_diff_list), label="active")
 
-    ax.legend()
+        ax.legend()
 
-    plt.savefig("diff.png")
+        plt.savefig("diff.png")
 
-    plt.close(fig)
+        plt.close(fig)
