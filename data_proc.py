@@ -6,12 +6,17 @@ import tqdm
 
 
 class DataProc():
-    def __init__(self, xmin=-10, xmax=10):
+    def __init__(self, xmin=-10, xmax=10, num_hist_bins=100):
         self.xmin = xmin
         self.xmax = xmax
 
+        self.num_hist_bins = num_hist_bins
+
         self.t_list = None
         self.diff_list = None
+
+        self.target_dsn = {'range': None,
+                           'probabilities': None}
 
     def approx_prob_dist(self, sample, sample_dim=None, bandwidth=0.2, kernel='gaussian'):
         model = KernelDensity(bandwidth=bandwidth, kernel=kernel)
@@ -34,27 +39,52 @@ class DataProc():
 
         return values, probabilities
 
-    def calc_KL_divergence(self, sample1, sample2):
+    def calc_KL_divergence(self, target_sample, test_sample):
 
-        if len(sample1.shape) == 1:
-            sample1 = sample1.reshape((sample1.shape[0], 1))
+        if len(target_sample.shape) == 1:
+            target_sample = target_sample.reshape((target_sample.shape[0], 1))
 
-        if len(sample2.shape) == 1:
-            sample2 = sample2.reshape((sample2.shape[0], 1))
+        if len(test_sample.shape) == 1:
+            test_sample = test_sample.reshape((test_sample.shape[0], 1))
 
         try:
-            if sample1.shape == sample2.shape:
-                sample_dim = sample1.shape[0]
+            if target_sample.shape == test_sample.shape:
+                sample_dim = target_sample.shape[0]
             else:
                 raise AssertionError
         except AssertionError:
             print(
-                "sample1 and sample2 are not the same shape, cannot calculate KL divergence")
+                "target_sample and test_sample are not the same shape, cannot calculate KL divergence")
 
-        _, h1 = self.approx_prob_dist(sample1, sample_dim=sample_dim)
-        _, h2 = self.approx_prob_dist(sample2, sample_dim=sample_dim)
+        h_target, b_target = np.histogram(target_sample,
+                                          bins=self.num_hist_bins,
+                                          density='pdf')
 
-        diff = np.sum(special.rel_entr(h1, h2))
+        b_target = (b_target[1:] + b_target[:-1])/2
+        h_target = h_target / np.sum(h_target)
+
+        # v2, h2 = self.approx_prob_dist(test_sample, sample_dim=sample_dim)
+
+        h_test, b_test = np.histogram(test_sample,
+                                      bins=self.num_hist_bins,
+                                      density='pdf')
+
+        b_test = (b_test[1:] + b_test[:-1])/2
+        h_test = h_test / np.sum(h_test)
+
+        try:
+            if not np.all(h_target >= 0):
+                raise TypeError
+        except TypeError:
+            print("Target sample histogram must have positive values")
+
+        try:
+            if not np.all(h_test >= 0):
+                raise TypeError
+        except TypeError:
+            print("Test sample histogram must have positive values")
+
+        diff = np.sum(special.rel_entr(h_test, h_target))
 
         return diff
 
