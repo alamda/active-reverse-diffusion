@@ -1,6 +1,5 @@
 from diffusion_numeric import DiffusionNumeric
-from noise_passive import NoisePassive
-from noise_active import NoiseActive
+from noise import NoiseActive, NoisePassive
 from target_multi_gaussian import TargetMultiGaussian
 from data_proc import DataProc
 
@@ -13,8 +12,10 @@ if __name__ == "__main__":
     num_diffusion_steps = 160
     dt = 0.005
 
-    T_passive = 1
-    T_active = 1
+    passive_noise_T = 1.0
+
+    active_noise_Tp = 0
+    active_noise_Ta = 1.0
     tau = 0.25
 
     mu_list = [-1.2, 1.2]
@@ -24,10 +25,11 @@ if __name__ == "__main__":
     xmin = -5
     xmax = 5
 
-    myPassiveNoise = NoisePassive(T=T_passive,
+    myPassiveNoise = NoisePassive(T=passive_noise_T,
                                   dim=sample_dim)
 
-    myActiveNoise = NoiseActive(T=T_active,
+    myActiveNoise = NoiseActive(Tp=active_noise_Tp,
+                                Ta=active_noise_Ta,
                                 tau=tau,
                                 dim=sample_dim)
 
@@ -49,13 +51,11 @@ if __name__ == "__main__":
 
     myDiffNum.train_diffusion_passive()
     myDiffNum.sample_from_diffusion_passive()
-    # myDiffNum.calculate_passive_diff_list()
-
-    myDiffNum.passive_noise.temperature = 0.0
+    myDiffNum.calculate_passive_diff_list()
 
     myDiffNum.train_diffusion_active()
     myDiffNum.sample_from_diffusion_active()
-    # myDiffNum.calculate_active_diff_list()
+    myDiffNum.calculate_active_diff_list()
 
     with open(f"{ofile_base}.pkl", 'wb') as f:
         pickle.dump(myDiffNum, f)
