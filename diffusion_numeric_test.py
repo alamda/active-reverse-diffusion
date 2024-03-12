@@ -1,6 +1,5 @@
 from diffusion_numeric import DiffusionNumeric
-from noise_passive import NoisePassive
-from noise_active import NoiseActive
+from noise import NoiseActive, NoisePassive
 from target_multi_gaussian import TargetMultiGaussian
 from data_proc import DataProc
 
@@ -13,8 +12,10 @@ class DiffusionNumericTest_Factory:
     num_diffusion_steps = 10
     dt = 0.01
 
-    T_passive = 0.5
-    T_active = 0.5
+    passive_noise_T = 1.0
+
+    active_noise_Tp = 0.5
+    active_noise_Ta = 0.5
     tau = 0.1
 
     mu_list = [-2.0, 0.0, 2.0]
@@ -25,10 +26,11 @@ class DiffusionNumericTest_Factory:
     xmax = 5
 
     def create_test_objects(self):
-        myPassiveNoise = NoisePassive(T=self.T_passive,
+        myPassiveNoise = NoisePassive(T=self.passive_noise_T,
                                       dim=self.sample_dim)
 
-        myActiveNoise = NoiseActive(T=self.T_active,
+        myActiveNoise = NoiseActive(Tp=self.active_noise_Tp,
+                                    Ta=self.active_noise_Ta,
                                     tau=self.tau,
                                     dim=self.sample_dim)
 
@@ -59,14 +61,6 @@ def test_init():
     assert myDiffNum.ofile_base == myFactory.ofile_base
     assert myDiffNum.num_diffusion_steps == myFactory.num_diffusion_steps
     assert myDiffNum.dt == myFactory.dt
-
-    # Move to noise test file
-    assert myDiffNum.passive_noise.temperature == myFactory.T_passive
-    assert myDiffNum.passive_noise.dim == myFactory.sample_dim
-
-    assert myDiffNum.active_noise.temperature == myFactory.T_active
-    assert myDiffNum.active_noise.correlation_time == myFactory.tau
-    assert myDiffNum.active_noise.dim == myFactory.sample_dim
 
     # Move to target test file
     assert myDiffNum.target.mu_list == myFactory.mu_list

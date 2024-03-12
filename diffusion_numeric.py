@@ -145,7 +145,7 @@ class DiffusionNumeric:
 
     def forward_diffusion_active(self):
         eta = torch.normal(torch.zeros_like(self.target.sample),
-                           np.sqrt(self.active_noise.temperature /
+                           np.sqrt(self.active_noise.temperature.active /
                                    self.active_noise.correlation_time)
                            * torch.ones_like(self.target.sample)
                            )
@@ -155,13 +155,13 @@ class DiffusionNumeric:
 
         for t_idx in range(self.num_diffusion_steps):
             x_t = x_t - self.dt*x_t + self.dt*eta + \
-                np.sqrt(2*self.passive_noise.temperature*self.dt) * \
+                np.sqrt(2*self.active_noise.temperature.passive*self.dt) * \
                 torch.normal(torch.zeros_like(self.target.sample),
                              torch.ones_like(self.target.sample))
 
             eta = eta - (1/self.active_noise.correlation_time)*self.dt*eta + \
                 (1/self.active_noise.correlation_time) * \
-                np.sqrt(2*self.active_noise.temperature*self.dt) * \
+                np.sqrt(2*self.active_noise.temperature.active*self.dt) * \
                 torch.normal(torch.zeros_like(eta), torch.ones_like(eta))
 
             samples.append(x_t)
@@ -218,8 +218,8 @@ class DiffusionNumeric:
         a = np.exp(-self.k*t)
         b = np.exp(-t/self.active_noise.correlation_time)
 
-        Tx = self.passive_noise.temperature
-        Ty = self.active_noise.temperature / \
+        Tx = self.active_noise.temperature.passive
+        Ty = self.active_noise.temperature.active / \
             (self.active_noise.correlation_time**2)
         w = (1/self.active_noise.correlation_time)
 
@@ -308,15 +308,18 @@ class DiffusionNumeric:
     def sample_from_diffusion_active(self, all_models_x=None, all_models_eta=None):
         if all_models_x is None:
             all_models_x = self.active_models_x
+
         if all_models_eta is None:
             all_models_eta = self.active_models_eta
 
-        x = np.sqrt(self.passive_noise.temperature/self.k + (self.active_noise.temperature /
-                                                             (self.k**2 * self.active_noise.correlation_time + self.k)
-                                                             )
+        x = np.sqrt(self.active_noise.temperature.passive/self.k +
+                    (self.active_noise.temperature.active /
+                     (self.k**2 * self.active_noise.correlation_time + self.k)
+                     )
                     ) * torch.randn([self.sample_dim, 1]).type(torch.DoubleTensor)
 
-        eta = np.sqrt(self.active_noise.temperature/self.active_noise.correlation_time) * \
+        eta = np.sqrt(self.active_noise.temperature.active /
+                      self.active_noise.correlation_time) * \
             torch.randn([self.sample_dim, 1]).type(torch.DoubleTensor)
 
         samples_x = [x.detach()]
@@ -328,15 +331,17 @@ class DiffusionNumeric:
             Fx = all_models_x[t](xin)
             Feta = all_models_eta[t](xin)
 
-            x = x + self.dt*(x-eta) + 2*self.passive_noise.temperature*Fx*self.dt + \
-                np.sqrt(2*self.passive_noise.temperature*self.dt) * \
+            x = x + self.dt*(x-eta) + \
+                2*self.active_noise.temperature.passive*Fx*self.dt + \
+                np.sqrt(2*self.active_noise.temperature.passive*self.dt) * \
                 torch.randn(x.shape)
 
             eta = eta + self.dt*eta/self.active_noise.correlation_time + \
-                (2*self.active_noise.temperature/(self.active_noise.correlation_time**2)) * Feta*self.dt + \
+                (2*self.active_noise.temperature.active /
+                    (self.active_noise.correlation_time**2)) * Feta*self.dt + \
                 (1/self.active_noise.correlation_time) * \
-                np.sqrt(2 * self.active_noise.temperature *
-                        self.dt) * torch.randn(eta.shape)
+                np.sqrt(2 * self.active_noise.temperature.active * self.dt) * \
+                torch.randn(eta.shape)
 
             samples_x.append(x.detach())
             samples_eta.append(eta.detach())

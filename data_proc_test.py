@@ -1,7 +1,6 @@
 from data_proc import DataProc
 from diffusion_numeric import DiffusionNumeric
-from noise_passive import NoisePassive
-from noise_active import NoiseActive
+from noise import NoiseActive, NoisePassive
 from target_multi_gaussian import TargetMultiGaussian
 
 import numpy as np
@@ -15,18 +14,21 @@ class DataProcTest_Factory:
     num_diffusion_steps = 10
     dt = 0.01
 
-    T_passive = 0.5
-    T_active = 0.5
+    passive_noise_T = 1.0
+
+    active_noise_Tp = 0.5
+    active_noise_Ta = 0.5
     tau = 0.1
 
     mu_list = [-2.0, 0.0, 2.0]
     sigma_list = [0.5, 0.5, 0.5]
     pi_list = [1.0, 1.0, 1.0]
 
-    myPassiveNoise = NoisePassive(T=T_passive,
+    myPassiveNoise = NoisePassive(T=passive_noise_T,
                                   dim=sample_dim)
 
-    myActiveNoise = NoiseActive(T=T_active,
+    myActiveNoise = NoiseActive(Tp=active_noise_Tp,
+                                Ta=active_noise_Ta,
                                 tau=tau,
                                 dim=sample_dim)
 
