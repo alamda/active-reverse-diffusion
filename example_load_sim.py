@@ -13,7 +13,7 @@ def plot_hist(passive_sample, active_sample, target_sample,
               png_fname):
     fig, ax = plt.subplots()
 
-    hist, bins, _ = ax.hist((passive_sample, active_sample, target_sample_array),
+    hist, bins, _ = ax.hist((passive_sample, active_sample, target_sample),
                             bins=num_hist_bins,
                             density=True,
                             label=['passive', 'active', 'target'],
@@ -32,21 +32,14 @@ def plot_hist(passive_sample, active_sample, target_sample,
     return
 
 
-if __name__ == "__main__":
-    fname = "data.pkl"
+def make_movie(sim_object=None, num_hist_bins=100):
 
-    if os.path.isfile(fname):
-        with open(fname, 'rb') as f:
-            mydiff = pickle.load(f)
-
-    num_hist_bins = 100
-
-    xmin = mydiff.data_proc.xmin
-    xmax = mydiff.data_proc.xmax
+    xmin = sim_object.data_proc.xmin
+    xmax = sim_object.data_proc.xmax
 
     hist_max = 0
 
-    target_sample = mydiff.target.sample.flatten()
+    target_sample = sim_object.target.sample.flatten()
     target_sample_array = target_sample.reshape(target_sample.shape[0])
 
     num_steps = len(mydiff.passive_reverse_samples)
@@ -61,10 +54,10 @@ if __name__ == "__main__":
         for idx in range(num_steps):
             png_fname = f"hist{str(idx).zfill(3)}.png"
 
-            passive_sample = mydiff.passive_reverse_samples[idx].flatten()
+            passive_sample = sim_object.passive_reverse_samples[idx].flatten()
             passive_sample = passive_sample.reshape(passive_sample.shape[0])
 
-            active_sample = mydiff.active_reverse_samples_x[idx].flatten()
+            active_sample = sim_object.active_reverse_samples_x[idx].flatten()
             active_sample = active_sample.reshape(active_sample.shape[0])
 
             proc = pool.apply_async(plot_hist, (passive_sample, active_sample,
@@ -77,6 +70,19 @@ if __name__ == "__main__":
             for proc in proc_list:
                 result_list.append(proc.get())
                 pbar.update()
+
+
+if __name__ == "__main__":
+    fname = "data.pkl"
+
+    if os.path.isfile(fname):
+        with open(fname, 'rb') as f:
+            mydiff = pickle.load(f)
+
+    num_hist_bins = 100
+
+    if False:
+        make_movie(sim_object=mydiff, num_hist_bins=20)
 
     ###
     fig, ax = plt.subplots()
