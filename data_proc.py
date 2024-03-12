@@ -94,7 +94,7 @@ class DataProc():
 
         num_diffusion_steps = len(diffusion_sample_list)
 
-        with tqdm.tqdm(total=len(proc_list)) as pbar:
+        with tqdm.tqdm(total=num_diffusion_steps) as pbar:
             for t_idx in range(0, num_diffusion_steps-1):
                 diff = self.calc_KL_divergence(target_sample,
                                                diffusion_sample_list[t_idx])
