@@ -359,8 +359,8 @@ class DiffusionNumeric:
                                                                 self.passive_reverse_samples,
                                                                 pool=pool)
             else:
-                self.data_proc.calc_diff_vs_t(self.target.sample,
-                                              self.passive_reverse_samples)
+                self.passive_diff_list = self.data_proc.calc_diff_vs_t(self.target.sample,
+                                                                       self.passive_reverse_samples)
 
     def calculate_active_diff_list(self, multiproc=True):
         if self.data_proc is not None:
@@ -375,5 +375,5 @@ class DiffusionNumeric:
                                                                 self.active_reverse_samples_x,
                                                                 pool=pool)
             else:
-                self.data_proc.calc_diff_vs_t(self.target.sample,
-                                              self.active_reverse_samples_x)
+                self.active_diff_list = self.data_proc.calc_diff_vs_t(self.target.sample,
+                                                                      self.active_reverse_samples_x)
