@@ -58,7 +58,8 @@ class DataProc():
 
         h_target, b_target = np.histogram(target_sample,
                                           bins=self.num_hist_bins,
-                                          density='pdf')
+                                          density='pdf',
+                                          range=(self.xmin, self.xmax))
 
         b_target = (b_target[1:] + b_target[:-1])/2
         h_target = h_target / np.sum(h_target)
@@ -67,7 +68,8 @@ class DataProc():
 
         h_test, b_test = np.histogram(test_sample,
                                       bins=self.num_hist_bins,
-                                      density='pdf')
+                                      density='pdf',
+                                      range=(self.xmin, self.xmax))
 
         b_test = (b_test[1:] + b_test[:-1])/2
         h_test = h_test / np.sum(h_test)
