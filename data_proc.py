@@ -6,7 +6,7 @@ import tqdm
 
 
 class DataProc():
-    def __init__(self, xmin=-10, xmax=10, num_hist_bins=100):
+    def __init__(self, xmin=-10, xmax=10, num_hist_bins=20):
         self.xmin = xmin
         self.xmax = xmax
 
