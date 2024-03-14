@@ -10,7 +10,7 @@ import tqdm
 
 def plot_hist(passive_sample, active_sample, target_sample,
               num_hist_bins, xmin, xmax,
-              png_fname):
+              png_fname, title):
     fig, ax = plt.subplots()
 
     hist, bins, _ = ax.hist((passive_sample, active_sample, target_sample),
@@ -22,6 +22,7 @@ def plot_hist(passive_sample, active_sample, target_sample,
                             alpha=1,
                             range=(xmin, xmax))
 
+    ax.set_title(title)
     ax.set_ylim(top=0.5)
 
     ax.legend()
@@ -54,6 +55,10 @@ def make_movie(sim_object=None, num_hist_bins=100):
         for idx in range(num_steps):
             png_fname = f"hist{str(idx).zfill(3)}.png"
 
+            time = idx * sim_object.dt
+
+            title = f"t = {time}"
+
             passive_sample = sim_object.passive_reverse_samples[idx].flatten()
             passive_sample = passive_sample.reshape(passive_sample.shape[0])
 
@@ -61,7 +66,7 @@ def make_movie(sim_object=None, num_hist_bins=100):
             active_sample = active_sample.reshape(active_sample.shape[0])
 
             proc = pool.apply_async(plot_hist, (passive_sample, active_sample,
-                                    target_sample_array, num_hist_bins, xmin, xmax, png_fname))
+                                    target_sample_array, num_hist_bins, xmin, xmax, png_fname, title))
 
             proc_list.append(proc)
 
@@ -78,6 +83,9 @@ if __name__ == "__main__":
     if os.path.isfile(fname):
         with open(fname, 'rb') as f:
             mydiff = pickle.load(f)
+
+        mydiff.data_proc.xmin = -5
+        mydiff.data_proc.xmax = 5
 
         num_hist_bins = 100
 
@@ -108,6 +116,9 @@ if __name__ == "__main__":
         plt.savefig("0hist.png")
         plt.close(fig)
 
+        xmin = mydiff.data_proc.xmin
+        xmax = mydiff.data_proc.xmax
+
         fig, ax = plt.subplots()
 
         ax.set_title("samples after diffusion")
@@ -122,7 +133,8 @@ if __name__ == "__main__":
                                 label=['passive', 'active', 'target'],
                                 histtype='step',
                                 fill=False,
-                                alpha=1)
+                                alpha=1,
+                                range=(xmin, xmax))
 
         new_bins = (bins[1:] + bins[:-1])/2
 
