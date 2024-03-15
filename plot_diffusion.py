@@ -20,4 +20,4 @@ if __name__ == "__main__":
 
         myPlotter.plot_KL_diffusion()
 
-        myPlotter.plot_hist_animation()
+        myPlotter.plot_hist_animation(ymax=0.8)
