@@ -31,12 +31,15 @@ class DiffusionNumeric:
         self.passive_models = None
         self.passive_reverse_samples = None
         self.passive_diff_list = None
+        self.passive_loss_history = None
 
         self.active_forward_samples_x = None
         self.active_forward_samples_eta = None
         self.active_reverse_samples_x = None
         self.active_reverse_samples_eta = None
         self.active_diff_list = None
+        self.active_loss_history_x = None
+        self.active_loss_history_eta = None
 
     def forward_diffusion_passive(self):
         forward_diffusion_sample_list = [self.target.sample]
@@ -115,6 +118,7 @@ class DiffusionNumeric:
             t_idx += 1
 
         self.passive_models = all_models
+        self.passive_loss_history = np.array(loss_history)
 
         return all_models
 
@@ -232,7 +236,9 @@ class DiffusionNumeric:
         return M11, M12, M22
 
     def train_diffusion_active(self, nrnodes=4, iterations=500):
-        loss_history = []
+        loss_history_x = []
+        loss_history_eta = []
+
         all_models_x = []
         all_models_eta = []
 
@@ -296,12 +302,16 @@ class DiffusionNumeric:
             all_models_x.append(copy.deepcopy(score_model_x))
             all_models_eta.append(copy.deepcopy(score_model_eta))
 
-            loss_history.append(loss_x.item())
+            loss_history_x.append(loss_x.item())
+            loss_history_eta.append(loss_eta.item())
 
             t_idx += 1
 
         self.active_models_x = all_models_x
         self.active_models_eta = all_models_eta
+
+        self.active_loss_history_x = np.array(loss_history_x)
+        self.active_loss_history_eta = np.array(loss_history_eta)
 
         return all_models_x, all_models_eta
 
