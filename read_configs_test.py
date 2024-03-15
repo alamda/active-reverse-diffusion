@@ -11,15 +11,18 @@ class ConfigsTest_Factory:
     sample_dim = 100
     xmin = -2.0
     xmax = 2.0
+    num_hist_bins = 20
 
     num_diffusion_steps = 123
     dt = 0.04
 
     passive_noise_T = 0.2
+    passive_training_iterations = 500
 
     active_noise_Tp = 0.1
     active_noise_Ta = 5
     active_noise_tau = 0.25
+    active_training_iterations = 1000
 
     target_type = 'gaussian'
 
@@ -38,6 +41,7 @@ class ConfigsTest_Factory:
             f.write(f'dimension: {self.sample_dim}{newline}')
             f.write(f'xmin: {self.xmin}{newline}')
             f.write(f'xmax: {self.xmax}{newline}')
+            f.write(f'num_hist_bins: {self.num_hist_bins}{newline}')
             f.write(f'{newline}')
 
             f.write(f'[diffusion]{newline}')
@@ -47,12 +51,16 @@ class ConfigsTest_Factory:
 
             f.write(f'[passive noise]{newline}')
             f.write(f'T: {self.passive_noise_T}{newline}')
+            f.write(
+                f'training_iterations: {self.passive_training_iterations}{newline}')
             f.write(f'{newline}')
 
             f.write(f'[active noise]{newline}')
             f.write(f'Tp: {self.active_noise_Tp}{newline}')
             f.write(f'Ta: {self.active_noise_Ta}{newline}')
             f.write(f'tau: {self.active_noise_tau}{newline}')
+            f.write(
+                f'training_iterations: {self.active_training_iterations}{newline}')
             f.write(f'{newline}')
 
             mu_string = ''
@@ -93,15 +101,18 @@ def test_init():
     assert myConfigs.sample_dim == myFactory.sample_dim
     assert myConfigs.xmin == myFactory.xmin
     assert myConfigs.xmax == myFactory.xmax
+    assert myConfigs.num_hist_bins == myFactory.num_hist_bins
 
     assert myConfigs.num_diffusion_steps == myFactory.num_diffusion_steps
     assert myConfigs.dt == myFactory.dt
 
     assert myConfigs.passive_noise_T == myFactory.passive_noise_T
+    assert myConfigs.passive_training_iterations == myFactory.passive_training_iterations
 
     assert myConfigs.active_noise_Tp == myFactory.active_noise_Tp
     assert myConfigs.active_noise_Ta == myFactory.active_noise_Ta
     assert myConfigs.active_noise_tau == myFactory.active_noise_tau
+    assert myConfigs.active_training_iterations == myFactory.active_training_iterations
 
     assert myConfigs.target_type == myFactory.target_type
 

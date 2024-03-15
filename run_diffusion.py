@@ -43,11 +43,21 @@ if __name__ == "__main__":
                                      sample_dim=myConfigs.sample_dim,
                                      data_proc=myDataProc)
 
-        myDiffNum.train_diffusion_passive()
+        if myConfigs.passive_training_iterations is not None:
+            myDiffNum.train_diffusion_passive(
+                iterations=myConfigs.passive_training_iterations)
+        else:
+            myDiffNum.train_diffusion_passive(iterations=500)
+
         myDiffNum.sample_from_diffusion_passive()
         myDiffNum.calculate_passive_diff_list()
 
-        myDiffNum.train_diffusion_active()
+        if myConfigs.active_training_iterations is not None:
+            myDiffNum.train_diffusion_active(
+                iterations=myConfigs.active_training_iterations)
+        else:
+            myDiffNum.train_diffusion_active(iterations=1000)
+
         myDiffNum.sample_from_diffusion_active()
         myDiffNum.calculate_active_diff_list()
 
