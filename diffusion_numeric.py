@@ -27,14 +27,18 @@ class DiffusionNumeric:
 
         self.data_proc = data_proc
 
+        self.passive_forward_time_arr = None
         self.passive_forward_samples = None
         self.passive_models = None
+        self.passive_reverse_time_arr = None
         self.passive_reverse_samples = None
         self.passive_diff_list = None
         self.passive_loss_history = None
 
+        self.active_forward_time_arr = None
         self.active_forward_samples_x = None
         self.active_forward_samples_eta = None
+        self.active_reverse_time_arr = None
         self.active_reverse_samples_x = None
         self.active_reverse_samples_eta = None
         self.active_diff_list = None
@@ -86,6 +90,8 @@ class DiffusionNumeric:
 
         t_idx = 1
 
+        time_step_list = []
+
         for e in bar:
             score_model = torch.nn.Sequential(
                 torch.nn.Linear(1, nrnodes), torch.nn.Tanh(),
@@ -115,8 +121,13 @@ class DiffusionNumeric:
 
             loss_history.append(loss.item())
 
+            time_now = t_idx * self.dt
+
+            time_step_list.append(time_now)
+
             t_idx += 1
 
+        self.passive_forward_time_arr = np.array(time_step_list)
         self.passive_models = all_models
         self.passive_loss_history = np.array(loss_history)
 
@@ -132,7 +143,12 @@ class DiffusionNumeric:
 
         samples = [x_t.detach()]
 
+        time_step_list = []
+
         for t in range(self.num_diffusion_steps-2, 0, -1):
+            time_now = t*self.dt
+
+            time_step_list.append(time_now)
 
             F = all_models[t](x_t)
             # If using the total score function
@@ -142,6 +158,8 @@ class DiffusionNumeric:
                 torch.randn(self.sample_dim, 1)
 
             samples.append(x_t.detach())
+
+        self.passive_reverse_time_arr = np.array(time_step_list)
 
         self.passive_reverse_samples = samples
 
@@ -255,6 +273,8 @@ class DiffusionNumeric:
                                    for f in forward_samples_eta]
         t_idx = 1
 
+        time_step_list = []
+
         bar = tqdm(range(1, self.num_diffusion_steps))
 
         for e in bar:
@@ -305,7 +325,13 @@ class DiffusionNumeric:
             loss_history_x.append(loss_x.item())
             loss_history_eta.append(loss_eta.item())
 
+            time_now = t_idx * self.dt
+
+            time_step_list.append(time_now)
+
             t_idx += 1
+
+        self.active_forward_time_arr = np.array(time_step_list)
 
         self.active_models_x = all_models_x
         self.active_models_eta = all_models_eta
@@ -336,6 +362,8 @@ class DiffusionNumeric:
         samples_eta = [eta.detach()]
 
         for t in range(self.num_diffusion_steps-2, 0, -1):
+            time_now = t*self.dt
+            time_step_list.append(time_now)
             xin = torch.cat((x, eta), dim=1)
 
             Fx = all_models_x[t](xin)
@@ -355,6 +383,8 @@ class DiffusionNumeric:
 
             samples_x.append(x.detach())
             samples_eta.append(eta.detach())
+
+        self.active_reverse_time_arr = np.array(time_step_list)
 
         self.active_reverse_samples_x = samples_x
         self.active_reverse_samples_eta = samples_eta
