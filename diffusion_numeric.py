@@ -133,7 +133,7 @@ class DiffusionNumeric:
 
         return all_models
 
-    def sample_from_diffusion_passive(self, all_models=None):
+    def sample_from_diffusion_passive(self, all_models=None, time=None):
 
         if all_models is None:
             all_models = self.passive_models
@@ -145,7 +145,21 @@ class DiffusionNumeric:
 
         time_step_list = []
 
-        for t in range(self.num_diffusion_steps-2, 0, -1):
+        if time is None:
+            reverse_diffusion_step_start = self.num_diffusion_steps - 2
+        else:
+            reverse_diffusion_step_start = int(np.ceil(time/self.dt)) - 1
+
+            try:
+                if reverse_diffusion_step_start > self.num_diffusion_steps - 2:
+                    reverse_diffusion_step_start = self.num_diffusion_steps - 2
+                    raise IndexError
+            except IndexError:
+                print(
+                    "Provided time value out of bounds, decreasing to max available time")
+
+        for t in range(reverse_diffusion_step_start, 0, -1):
+
             time_now = t*self.dt
 
             time_step_list.append(time_now)
@@ -341,7 +355,7 @@ class DiffusionNumeric:
 
         return all_models_x, all_models_eta
 
-    def sample_from_diffusion_active(self, all_models_x=None, all_models_eta=None):
+    def sample_from_diffusion_active(self, all_models_x=None, all_models_eta=None, time=None):
         if all_models_x is None:
             all_models_x = self.active_models_x
 
@@ -361,7 +375,15 @@ class DiffusionNumeric:
         samples_x = [x.detach()]
         samples_eta = [eta.detach()]
 
-        for t in range(self.num_diffusion_steps-2, 0, -1):
+        time_step_list = []
+
+        if time is None:
+            reverse_diffusion_step_start = self.num_diffusion_steps - 2
+        else:
+            reverse_diffusion_step_start = int(np.ceil(time/self.dt)) - 1
+
+        for t in range(reverse_diffusion_step_start, 0, -1):
+
             time_now = t*self.dt
             time_step_list.append(time_now)
             xin = torch.cat((x, eta), dim=1)

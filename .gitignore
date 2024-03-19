@@ -6,6 +6,7 @@ quartic_target_example.png
 *.pkl
 runs/
 test/
+*.png
 
 *.dot
 abstract_classes/*.dot
