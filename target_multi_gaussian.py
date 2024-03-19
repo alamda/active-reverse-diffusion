@@ -1,5 +1,6 @@
 from abstract_classes.target import TargetAbstract
 import torch
+import numpy as np
 
 
 class TargetMultiGaussian(TargetAbstract):
@@ -42,11 +43,11 @@ class TargetMultiGaussian(TargetAbstract):
 
 if __name__ == "__main__":
 
-    sigma_list = [1.0, 1.0, 1.0]
-    mu_list = [-2.0, 0.0, 2.0]
-    pi_list = [0.2, 0.5, 0.3]
+    sigma_list = [1.0, 1.0]
+    mu_list = [-1.2, 1.2]
+    pi_list = [1.0, 1.0]
 
-    dim = 1000
+    dim = 50000
 
     # Setting target parameters after creating the target object
 
@@ -67,4 +68,5 @@ if __name__ == "__main__":
     # Plot a histogram to target sample and save to file
 
     myTarget.plot_target_hist(fname="multi_gauss_target_example.png",
-                              title=f"sigma={sigma_list}, mu={mu_list}, pi={pi_list}, dim={dim}")
+                              title=f"sigma={sigma_list}, mu={mu_list}, pi={pi_list}, dim={dim}",
+                              range=(-5, 5))

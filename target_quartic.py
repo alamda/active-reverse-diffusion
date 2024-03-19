@@ -5,18 +5,21 @@ import scipy.interpolate
 
 
 class TargetQuartic(TargetAbstract):
-    def __init__(self, name="quartic", a=None, b=None, dim=None):
+    def __init__(self, name="quartic", a=None, b=None, dim=None, xmin=None, xmax=None):
 
         super().__init__(name=name, dim=dim)
 
         self.a = a
         self.b = b
 
+        self.xmin = xmin
+        self.xmax = xmax
+
         if (self.a is not None) and (self.b is not None) and \
                 (self.dim is not None):
             self.gen_target_sample()
 
-    def gen_target_sample(self, a=None, b=None, dim=None, num_points=50000):
+    def gen_target_sample(self, a=None, b=None, dim=None, num_points=50000, xmin=None, xmax=None):
         a = self.a if a is None else a
         self.a = a
 
@@ -26,8 +29,11 @@ class TargetQuartic(TargetAbstract):
         dim = self.dim if dim is None else dim
         self.dim = dim
 
-        xmin = -2*np.sqrt(abs(b/a))
-        xmax = 2*np.sqrt(abs(b/a))
+        xmin = self.xmin if self.xmin is not None else -2*np.sqrt(abs(b/a))
+        self.xmin = xmin
+
+        xmax = self.xmax if self.xmax is not None else 2*np.sqrt(abs(b/a))
+        self.xmax = xmax
 
         x_arr = np.linspace(xmin, xmax, num_points)
         y_arr = -(a*x_arr**4 + b*x_arr**2)
@@ -55,9 +61,12 @@ class TargetQuartic(TargetAbstract):
 if __name__ == "__main__":
 
     a = 1
-    b = -10
+    b = -3
 
-    dim = 1000
+    dim = 50000
+
+    xmin = -5
+    xmax = 5
 
     # Setting target parameters after creating the target object
 
@@ -68,8 +77,9 @@ if __name__ == "__main__":
     # Passing target parameters directly to target object constructor
 
     myTarget = TargetQuartic(a=a, b=b, dim=dim)
-    
+
     # Plot a histogram of the target sample and save to file
 
     myTarget.plot_target_hist(fname="quartic_target_example.png",
-                              title=f"a={a}, b={b}, dim={dim}")
+                              title=f"a={a}, b={b}, dim={dim}",
+                              range=(-5, 5))

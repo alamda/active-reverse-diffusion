@@ -21,10 +21,12 @@ class TargetAbstract(AbstractBaseClass):
     def plot_target_hist(self,
                          fname="target.png",
                          title="example target sample",
-                         bins=100):
+                         bins=100,
+                         range=None):
         fig, ax = plt.subplots()
 
-        ax.hist(self.sample.reshape(self.dim), bins=bins)
+        ax.hist(self.sample.reshape(self.dim),
+                bins=bins, density=True, range=range)
         ax.set_title(title)
 
         plt.savefig(fname)
