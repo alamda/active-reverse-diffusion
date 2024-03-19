@@ -31,14 +31,23 @@ class Configs:
         self.target_type = str(self.parser['target']['type'])
 
         # Multigaussian target dsn
-        if (self.target_type == 'gaussian') or (self.target_type == 'Gaussian'):
-            self.target_parser = \
-                configparser.ConfigParser(
-                    converters={'list': lambda x: [float(i.strip()) for i in x.split(',')]})
+        try:
+            if (self.target_type == 'gaussian') or (self.target_type == 'Gaussian'):
+                self.target_parser = \
+                    configparser.ConfigParser(
+                        converters={'list': lambda x: [float(i.strip()) for i in x.split(',')]})
 
-            self.target_parser.read(filename)
+                self.target_parser.read(filename)
 
-            self.mu_list = self.target_parser.getlist('target', 'mu_list')
-            self.sigma_list = self.target_parser.getlist(
-                'target', 'sigma_list')
-            self.pi_list = self.target_parser.getlist('target', 'pi_list')
+                self.mu_list = self.target_parser.getlist('target', 'mu_list')
+                self.sigma_list = self.target_parser.getlist(
+                    'target', 'sigma_list')
+                self.pi_list = self.target_parser.getlist('target', 'pi_list')
+
+            elif self.target_type in ('quartic', 'double_well'):
+                self.a = float(self.parser['target']['a'])
+                self.b = float(self.parser['target']['b'])
+            else:
+                raise ValueError
+        except ValueError:
+            print("Unknown target type specified in config file, target not configured")
