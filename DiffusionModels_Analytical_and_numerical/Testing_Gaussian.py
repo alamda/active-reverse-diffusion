@@ -134,7 +134,7 @@ else:
     with open('ymat.pkl', 'wb') as f:
         pickle.dump(ymat, f)
 
-if os.path.isfile('difflist_passive_analytical.pkl'):
+if os.path.isfile('difflist_active_analytical.pkl'):
     with open('difflist_active_analytical.pkl', 'rb') as f:
         difflist_active_analytical = pickle.load(f)
 else:
@@ -154,7 +154,7 @@ if os.path.isfile('all_models_x.pkl') and os.path.isfile('all_models_eta.pkl'):
         all_models_eta = pickle.load(f)
 else:
     all_models_x, all_models_eta = rdn.active_training(
-        dataset, tsteps, Tp, Ta, tau, k, dt, nrnodes=4, iterations=500)
+        dataset, tsteps, Tp, Ta, tau, k, dt, nrnodes=4, iterations=1000)
 
     with open('all_models_x.pkl', 'wb') as f:
         pickle.dump(all_models_x, f)
