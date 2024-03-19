@@ -3,6 +3,7 @@ from abc import abstractmethod
 
 import matplotlib.pyplot as plt
 import pickle
+import numpy as np
 
 
 class TargetAbstract(AbstractBaseClass):
@@ -17,6 +18,9 @@ class TargetAbstract(AbstractBaseClass):
 
         self.sample = None
 
+        self.x_arr = None
+        self.prob_arr = None
+
     @abstractmethod
     def gen_target_sample(self):
         """Define the target dsn and sample it after it was initialized"""
@@ -25,11 +29,22 @@ class TargetAbstract(AbstractBaseClass):
                          fname="target.png",
                          title="example target sample",
                          bins=100,
-                         range=None):
+                         hist_range=None):
+        hist_range = hist_range if hist_range is not None else (
+            self.xmin, self.xmax)
+
         fig, ax = plt.subplots()
 
-        ax.hist(self.sample.reshape(self.dim),
-                bins=bins, density=True, range=range)
+        hist, bins, _ = ax.hist(self.sample.reshape(self.dim),
+                                bins=bins, density=True, hist_range=hist_range)
+
+        ax.set_ylim(bottom=0)
+
+        if (self.x_arr is not None) and (self.prob_arr is not None):
+            ax2 = ax.twinx()
+            ax2.plot(self.x_arr, self.prob_arr, color='orange')
+            ax2.set_ylim(bottom=0)
+
         ax.set_title(title)
 
         plt.savefig(fname)
