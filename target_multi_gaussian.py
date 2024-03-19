@@ -4,9 +4,10 @@ import numpy as np
 
 
 class TargetMultiGaussian(TargetAbstract):
-    def __init__(self, name="multi_gauss", sigma_list=None, mu_list=None, pi_list=None, dim=None):
+    def __init__(self, name="multi_gauss", sigma_list=None, mu_list=None, pi_list=None, dim=None,
+                 xmin=None, xmax=None):
 
-        super().__init__(name=name, dim=dim)
+        super().__init__(name=name, dim=dim, xmin=xmin, xmax=xmax)
 
         self.sigma_list = sigma_list
         self.mu_list = mu_list
@@ -19,7 +20,8 @@ class TargetMultiGaussian(TargetAbstract):
 
             self.gen_target_sample()
 
-    def gen_target_sample(self, sigma_list=None, mu_list=None, pi_list=None, dim=None):
+    def gen_target_sample(self, sigma_list=None, mu_list=None, pi_list=None, dim=None,
+                          xmin=None, xmax=None, num_points=50000):
         sigma_list = self.sigma_list if sigma_list is None else sigma_list
         self.sigma_list = sigma_list
 
@@ -56,17 +58,21 @@ if __name__ == "__main__":
     myTarget.gen_target_sample(sigma_list=sigma_list,
                                mu_list=mu_list,
                                pi_list=pi_list,
-                               dim=dim)
+                               dim=dim,
+                               xmin=-5,
+                               xmax=5)
 
     # Passing target parameters directly to target object constructor
 
     myTarget = TargetMultiGaussian(sigma_list=sigma_list,
                                    mu_list=mu_list,
                                    pi_list=pi_list,
-                                   dim=dim)
+                                   dim=dim,
+                                   xmin=-5,
+                                   xmax=5)
 
     # Plot a histogram to target sample and save to file
 
     myTarget.plot_target_hist(fname="multi_gauss_target_example.png",
                               title=f"sigma={sigma_list}, mu={mu_list}, pi={pi_list}, dim={dim}",
-                              range=(-5, 5))
+                              hist_range=(-5, 5))

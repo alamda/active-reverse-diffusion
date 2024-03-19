@@ -7,13 +7,10 @@ import scipy.interpolate
 class TargetQuartic(TargetAbstract):
     def __init__(self, name="quartic", a=None, b=None, dim=None, xmin=None, xmax=None):
 
-        super().__init__(name=name, dim=dim)
+        super().__init__(name=name, dim=dim, xmin=xmin, xmax=xmax)
 
         self.a = a
         self.b = b
-
-        self.xmin = xmin
-        self.xmax = xmax
 
         if (self.a is not None) and (self.b is not None) and \
                 (self.dim is not None):
@@ -82,4 +79,4 @@ if __name__ == "__main__":
 
     myTarget.plot_target_hist(fname="quartic_target_example.png",
                               title=f"a={a}, b={b}, dim={dim}",
-                              range=(-5, 5))
+                              hist_range=(-5, 5))

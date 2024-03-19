@@ -8,9 +8,12 @@ import pickle
 class TargetAbstract(AbstractBaseClass):
     """Abstract class for the target distribution"""
 
-    def __init__(self, name="target", dim=None):
+    def __init__(self, name="target", dim=None, xmin=None, xmax=None):
         self.name = name
         self.dim = dim
+
+        self.xmin = xmin
+        self.xmax = xmax
 
         self.sample = None
 
