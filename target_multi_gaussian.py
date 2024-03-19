@@ -34,13 +34,23 @@ class TargetMultiGaussian(TargetAbstract):
         dim = self.dim if dim is None else dim
         self.dim = dim
 
-        dsn = torch.distributions.mixture_same_family.MixtureSameFamily(
-            torch.distributions.Categorical(torch.tensor(pi_list)),
-            torch.distributions.Normal(torch.tensor(
-                mu_list), torch.tensor(sigma_list))
-        )
+        self.xmin = xmin if xmin is not None else self.xmin
 
-        self.sample = dsn.sample(torch.Size([dim, 1]))
+        self.xmax = xmax if xmax is not None else self.xmax
+
+        x_arr = np.linspace(self.xmin, self.xmax, num_points)
+
+        y_arr = np.zeros(num_points)
+
+        for mu, sigma, pi in zip(mu_list, sigma_list, pi_list):
+            y_arr += pi*np.exp(-1*(x_arr-mu)**2/(2*sigma**2))
+
+        y_arr /= np.sum(y_arr)
+
+        self.x_arr = x_arr
+        self.prob_arr = y_arr
+
+        self.sample = np.random.choice(x_arr, size=self.dim, p=y_arr)
 
 
 if __name__ == "__main__":
