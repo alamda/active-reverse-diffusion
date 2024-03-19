@@ -33,32 +33,20 @@ class TargetQuartic(TargetAbstract):
         self.xmax = xmax
 
         x_arr = np.linspace(xmin, xmax, num_points)
-        y_arr = -(a*x_arr**4 + b*x_arr**2)
+        y_arr = np.exp(-(a*x_arr**4 + b*x_arr**2))
 
-        y_arr -= np.min(y_arr)
         y_arr = y_arr/(np.sum(y_arr))
 
-        y_arr[0] = 0
+        self.x_arr = x_arr
+        self.prob_arr = y_arr
 
-        cdf_arr = 0*y_arr
-
-        for i in range(1, num_points):
-            cdf_arr[i] = cdf_arr[i-1] + y_arr[i]
-
-        self.sample = torch.tensor(self.inverse_transform_sampling(
-            x_arr, cdf_arr, self.dim))
-
-    def inverse_transform_sampling(self, x, y, num_points):
-        inv_cdf = scipy.interpolate.interp1d(y, x)
-        r = np.random.rand(num_points)
-
-        return inv_cdf(r)
+        self.sample = np.random.choice(x_arr, size=self.dim, p=y_arr)
 
 
 if __name__ == "__main__":
 
-    a = 1
-    b = -3
+    a = 0.035
+    b = -0.1
 
     dim = 50000
 
