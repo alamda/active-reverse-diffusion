@@ -1,6 +1,7 @@
 from diffusion_numeric import DiffusionNumeric
 from noise import NoiseActive, NoisePassive
 from target_multi_gaussian import TargetMultiGaussian
+from target_quartic import TargetQuartic
 from data_proc import DataProc
 
 import pickle
@@ -26,11 +27,19 @@ if __name__ == "__main__":
                                     Ta=myConfigs.active_noise_Ta,
                                     tau=myConfigs.active_noise_tau,
                                     dim=myConfigs.sample_dim)
-
-        myTarget = TargetMultiGaussian(mu_list=myConfigs.mu_list,
-                                       sigma_list=myConfigs.sigma_list,
-                                       pi_list=myConfigs.pi_list,
-                                       dim=myConfigs.sample_dim)
+        if myConfigs.target_type in ('gaussian', 'Gaussian'):
+            myTarget = TargetMultiGaussian(mu_list=myConfigs.mu_list,
+                                           sigma_list=myConfigs.sigma_list,
+                                           pi_list=myConfigs.pi_list,
+                                           dim=myConfigs.sample_dim,
+                                           xmin=myConfigs.xmin,
+                                           xmax=myConfigs.xmax)
+        elif myConfigs.target_type in ('double_well'):
+            myTarget = TargetQuartic(a=myConfigs.a,
+                                     b=myConfigs.b,
+                                     xmin=myConfigs.xmin,
+                                     xmax=myConfigs.xmax,
+                                     dim=myConfigs.sample_dim)
 
         myDataProc = DataProc(xmin=myConfigs.xmin, xmax=myConfigs.xmax)
 
