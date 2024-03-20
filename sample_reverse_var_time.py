@@ -5,6 +5,8 @@ import numpy as np
 
 import argparse
 
+from plotter import Plotter
+
 
 def sample_reverse_time(sim_object=None, time=None):
     sim_object.sample_from_diffusion_passive(time=time)
@@ -18,6 +20,19 @@ def sample_reverse_time(sim_object=None, time=None):
 
     t_active = sim_object.active_reverse_time_arr
     d_active = sim_object.active_diff_list
+
+    ymax = 0.5
+
+    plotter = Plotter(diffusion_object=sim_object)
+    plotter.plot_sample_hist_pre_diffusion(png_fname=f"hist_pre_{time}.png",
+                                           ymax=ymax)
+
+    plotter.plot_sample_hist_post_diffusion(png_fname=f"hist_post_{time}.png",
+                                            title=f"sample after reverse diffusion from t={time}",
+                                            ymax=ymax)
+
+    plotter.plot_hist_animation(mp4_fname=f"hist_{time}.mp4",
+                                ymax=ymax)
 
     return (t_passive, d_passive, t_active, d_active)
 
