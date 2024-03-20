@@ -46,6 +46,8 @@ if __name__ == "__main__":
     parser.add_argument('--xmin', type=float)
     parser.add_argument('--xmax', type=float)
     parser.add_argument('--num_hist_bins', type=int)
+    parser.add_argument('--log_kl_min', type=int)
+    parser.add_argument('--log_kl_max', type=int)
 
     args = parser.parse_args()
 
@@ -133,6 +135,7 @@ if __name__ == "__main__":
         ax.legend()
         ax.set_xlabel("(reverse) time")
         ax.set_ylabel("Log(KL-Divergence)")
+        ax.set_ylim((args.log_kl_min, args.log_kl_max))
 
         plt.savefig('reverse_kl.png')
 
