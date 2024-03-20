@@ -36,14 +36,18 @@ class Plotter:
 
         plt.close(fig)
 
-    def plot_sample_hist(self, idx=None, png_fname=None):
+    def plot_sample_hist(self, idx=None, png_fname=None, ymax=None, title=None):
 
         if png_fname is None:
             png_fname = f'hist{str(idx).zfill(3)}'
 
         fig, ax = plt.subplots()
 
-        ax.set_title("samples before diffusion")
+        if title is None:
+            time = float(self.diffusion_object.active_reverse_time_arr[idx])
+            ax.set_title("time = %.2f" % round(time, 2))
+        else:
+            ax.set_title(title)
 
         target_sample = self.diffusion_object.target.sample.flatten()
         passive_sample = self.diffusion_object.passive_reverse_samples[idx].flatten(
@@ -68,15 +72,19 @@ class Plotter:
         new_bins = (bins[1:] + bins[:-1])/2
 
         ax.legend()
+        if ymax is not None:
+            ax.set_ylim((0, ymax))
 
         plt.savefig(png_fname)
         plt.close(fig)
 
-    def plot_sample_hist_post_diffusion(self):
-        self.plot_sample_hist(idx=-1, png_fname="hist_post.png")
+    def plot_sample_hist_post_diffusion(self, png_fname="hist_post.png", ymax=None, title=None):
+        self.plot_sample_hist(idx=-1, png_fname=png_fname,
+                              ymax=ymax, title=title)
 
-    def plot_sample_hist_pre_diffusion(self):
-        self.plot_sample_hist(idx=0, png_fname="hist_pre.png")
+    def plot_sample_hist_pre_diffusion(self, png_fname="hist_pre.png", ymax=None, title=None):
+        self.plot_sample_hist(idx=0, png_fname=png_fname,
+                              ymax=ymax, title=title)
 
     def plot_KL_diffusion(self, png_fname="KL_learning.png"):
         fig, ax = plt.subplots()
@@ -140,7 +148,7 @@ class Plotter:
 
         return bar_container
 
-    def plot_hist_animation(self, num_bins=None, ymax=None):
+    def plot_hist_animation(self, num_bins=None, ymax=None, mp4_fname='hist.mp4'):
         if num_bins is None:
             num_bins = self.diffusion_object.data_proc.num_hist_bins
 
@@ -191,4 +199,4 @@ class Plotter:
                                       repeat=False)
 
         FFwriter = animation.FFMpegWriter(fps=10)
-        ani.save('hist.mp4', writer=FFwriter)
+        ani.save(mp4_fname, writer=FFwriter)
