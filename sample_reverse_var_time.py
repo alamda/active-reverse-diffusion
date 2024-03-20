@@ -43,6 +43,7 @@ if __name__ == "__main__":
     parser.add_argument('-f', '--filename', required=True)
     parser.add_argument('--xmin', type=float)
     parser.add_argument('--xmax', type=float)
+    parser.add_argument('--num_hist_bins', type=int)
 
     args = parser.parse_args()
 
@@ -55,6 +56,9 @@ if __name__ == "__main__":
 
         if args.xmax is not None:
             mydiff.data_proc.xmax = args.xmax
+
+        if args.num_hist_bins is not None:
+            mydiff.data_proc.num_hist_bins = args.num_hist_bins
 
         diff_dict = {}
 
