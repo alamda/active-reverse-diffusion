@@ -82,18 +82,19 @@ if __name__ == "__main__":
         times_to_plot = [0.3, 0.4, 0.5, 0.6, 1.0, 1.5, 2.0]
 
         for time in times_to_plot:  # diff_dict.keys():
-            time_dict = diff_dict[time]
+            if time in time_list:
+                time_dict = diff_dict[time]
 
-            color = next(ax._get_lines.prop_cycler)['color']
-            label = f"time = {time}"
+                color = next(ax._get_lines.prop_cycler)['color']
+                label = f"time = {time}"
 
-            ax.plot(-1*time_dict['time_passive'], np.log(time_dict['diff_passive']),
-                    color=color, linestyle='dashed',
-                    label=f"{label} (passive)")
+                ax.plot(-1*time_dict['time_passive'], np.log(time_dict['diff_passive']),
+                        color=color, linestyle='dashed',
+                        label=f"{label} (passive)")
 
-            ax.plot(-1*time_dict['time_active'], np.log(time_dict['diff_active']),
-                    color=color,
-                    label=f"{label} (active)")
+                ax.plot(-1*time_dict['time_active'], np.log(time_dict['diff_active']),
+                        color=color,
+                        label=f"{label} (active)")
 
         ax.legend()
         ax.set_xlabel("(reverse) time")
