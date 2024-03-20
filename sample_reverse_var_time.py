@@ -23,12 +23,14 @@ def sample_reverse_time(sim_object=None, time=None):
 
     ymax = 0.5
 
+    time_str = str(time).ljust(4, '0')
+
     plotter = Plotter(diffusion_object=sim_object)
-    plotter.plot_sample_hist_pre_diffusion(png_fname=f"hist_pre_{time}.png",
+    plotter.plot_sample_hist_pre_diffusion(png_fname=f"hist_pre_{time_str}.png",
                                            ymax=ymax)
 
-    plotter.plot_sample_hist_post_diffusion(png_fname=f"hist_post_{time}.png",
-                                            title=f"sample after reverse diffusion from t={time}",
+    plotter.plot_sample_hist_post_diffusion(png_fname=f"hist_post_{time_str}.png",
+                                            title=f"sample after reverse diffusion from t={time_str}",
                                             ymax=ymax)
 
     plotter.plot_hist_animation(mp4_fname=f"hist_{time}.mp4",
