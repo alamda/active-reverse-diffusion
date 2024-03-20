@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 
+import argparse
+
 
 def sample_reverse_time(sim_object=None, time=None):
     sim_object.sample_from_diffusion_passive(time=time)
@@ -22,9 +24,22 @@ def sample_reverse_time(sim_object=None, time=None):
 
 if __name__ == "__main__":
 
-    if os.path.isfile("/home/alexandra/research/active_diffusion_runs/17/data.pkl"):
-        with open("/home/alexandra/research/active_diffusion_runs/17/data.pkl", 'rb') as f:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', '--filename', required=True)
+    parser.add_argument('--xmin', type=float)
+    parser.add_argument('--xmax', type=float)
+
+    args = parser.parse_args()
+
+    if os.path.isfile(args.filename):
+        with open(args.filename, 'rb') as f:
             mydiff = pickle.load(f)
+
+        if args.xmin is not None:
+            mydiff.data_proc.xmin = args.xmin
+
+        if args.xmax is not None:
+            mydiff.data_proc.xmax = args.xmax
 
         diff_dict = {}
 
