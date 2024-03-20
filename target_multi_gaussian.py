@@ -50,7 +50,8 @@ class TargetMultiGaussian(TargetAbstract):
         self.x_arr = x_arr
         self.prob_arr = y_arr
 
-        self.sample = np.random.choice(x_arr, size=self.dim, p=y_arr)
+        self.sample = torch.from_numpy(
+            np.random.choice(x_arr, size=self.dim, p=y_arr))
 
 
 if __name__ == "__main__":
