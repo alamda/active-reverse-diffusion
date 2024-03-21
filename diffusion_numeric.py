@@ -32,27 +32,6 @@ class DiffusionNumeric(Diffusion):
         self.active_loss_history_x = None
         self.active_loss_history_eta = None
 
-    def forward_diffusion_passive(self):
-        forward_diffusion_sample_list = [self.target.sample]
-
-        x_t = self.target.sample
-
-        for t_idx in range(self.num_diffusion_steps):
-            x_t = x_t - self.dt*x_t + \
-                np.sqrt(2*self.passive_noise.temperature*self.dt) * \
-                torch.normal(torch.zeros_like(self.target.sample),
-                             torch.ones_like(self.target.sample)
-                             )
-
-            forward_diffusion_sample_list.append(x_t)
-
-        forward_diffusion_sample_list = [f.reshape((self.sample_dim, 1)).type(torch.DoubleTensor)
-                                         for f in forward_diffusion_sample_list]
-
-        self.passive_forward_samples = forward_diffusion_sample_list
-
-        return forward_diffusion_sample_list
-
     def compute_loss_passive(self, forward_samples, t, score_model):
         xt = forward_samples[t].type(torch.DoubleTensor)         # x(t)
 
@@ -169,40 +148,6 @@ class DiffusionNumeric(Diffusion):
 
         return x_t.detach(), samples
 
-    def forward_diffusion_active(self):
-        eta = torch.normal(torch.zeros_like(self.target.sample),
-                           np.sqrt(self.active_noise.temperature.active /
-                                   self.active_noise.correlation_time)
-                           * torch.ones_like(self.target.sample)
-                           )
-        samples = [self.target.sample]
-        eta_samples = [eta]
-        x_t = self.target.sample
-
-        for t_idx in range(self.num_diffusion_steps):
-            x_t = x_t - self.dt*x_t + self.dt*eta + \
-                np.sqrt(2*self.active_noise.temperature.passive*self.dt) * \
-                torch.normal(torch.zeros_like(self.target.sample),
-                             torch.ones_like(self.target.sample))
-
-            eta = eta - (1/self.active_noise.correlation_time)*self.dt*eta + \
-                (1/self.active_noise.correlation_time) * \
-                np.sqrt(2*self.active_noise.temperature.active*self.dt) * \
-                torch.normal(torch.zeros_like(eta), torch.ones_like(eta))
-
-            samples.append(x_t)
-            eta_samples.append(eta)
-
-        samples = [s.reshape((self.sample_dim, 1)).type(torch.DoubleTensor)
-                   for s in samples]
-
-        eta_samples = [s.reshape((self.sample_dim, 1)).type(torch.DoubleTensor)
-                       for s in eta_samples]
-
-        self.active_forward_samples_x = samples
-        self.active_forward_samples_eta = eta_samples
-
-        return samples, eta_samples
 
     def compute_loss_active(self, t_idx,
                             forward_samples_x, forward_samples_eta,
