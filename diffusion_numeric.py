@@ -59,6 +59,9 @@ class DiffusionNumeric:
 
             forward_diffusion_sample_list.append(x_t)
 
+        forward_diffusion_sample_list = [f.reshape((self.sample_dim, 1)).type(torch.DoubleTensor)
+                                         for f in forward_diffusion_sample_list]
+
         self.passive_forward_samples = forward_diffusion_sample_list
 
         return forward_diffusion_sample_list
@@ -202,6 +205,12 @@ class DiffusionNumeric:
 
             samples.append(x_t)
             eta_samples.append(eta)
+
+        samples = [s.reshape((self.sample_dim, 1)).type(torch.DoubleTensor)
+                   for s in samples]
+
+        eta_samples = [s.reshape((self.sample_dim, 1)).type(torch.DoubleTensor)
+                       for s in eta_samples]
 
         self.active_forward_samples_x = samples
         self.active_forward_samples_eta = eta_samples

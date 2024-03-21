@@ -37,7 +37,9 @@ class DiffusionNumericTest_Factory:
         myTarget = TargetMultiGaussian(mu_list=self.mu_list,
                                        sigma_list=self.sigma_list,
                                        pi_list=self.pi_list,
-                                       dim=self.sample_dim)
+                                       dim=self.sample_dim,
+                                       xmin=self.xmin,
+                                       xmax=self.xmax)
 
         myDataProc = DataProc(xmin=self.xmin, xmax=self.xmax)
 
