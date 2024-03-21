@@ -22,7 +22,8 @@ class DiffusionNumeric(Diffusion):
                          dt=dt,
                          k=k,
                          sample_dim=sample_dim,
-                         data_proc=data_proc)
+                         data_proc=data_proc,
+                         diffusion_type='numeric')
 
         self.passive_models = None
         self.passive_loss_history = None
@@ -147,7 +148,6 @@ class DiffusionNumeric(Diffusion):
         self.passive_reverse_samples = samples
 
         return x_t.detach(), samples
-
 
     def compute_loss_active(self, t_idx,
                             forward_samples_x, forward_samples_eta,
