@@ -69,6 +69,8 @@ class DiffusionAnalytic(Diffusion):
                 print(
                     "Provided time value out of bounds, decreasing to max available time")
 
+        self.num_passive_reverse_diffusion_steps = reverse_diffusion_step_start + 1
+
         for t in range(reverse_diffusion_step_start, 0, -1):
 
             time_now = t*self.dt
@@ -184,6 +186,8 @@ class DiffusionAnalytic(Diffusion):
             reverse_diffusion_step_start = self.num_diffusion_steps - 2
         else:
             reverse_diffusion_step_start = int(np.ceil(time/self.dt)) - 1
+
+        self.num_active_reverse_diffusion_steps = reverse_diffusion_step_start + 1
 
         for t in range(reverse_diffusion_step_start, 0, -1):
 

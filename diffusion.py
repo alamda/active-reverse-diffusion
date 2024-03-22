@@ -43,6 +43,9 @@ class Diffusion(AbstractBaseClass):
 
         self.diffusion_type = diffusion_type
 
+        self.num_passive_reverse_difussion_steps = None
+        self.num_active_reverse_diffusion_steps = None
+
     def forward_diffusion_passive(self):
         forward_diffusion_sample_list = [self.target.sample]
 
