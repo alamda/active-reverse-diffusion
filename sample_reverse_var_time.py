@@ -33,8 +33,8 @@ def sample_reverse_time(sim_object=None, time=None):
                                             title=f"sample after reverse diffusion from t={time_str}",
                                             ymax=ymax)
 
-    plotter.plot_hist_animation(mp4_fname=f"hist_{time}.mp4",
-                                ymax=ymax)
+    # plotter.plot_hist_animation(mp4_fname=f"hist_{time}.mp4",
+    #                             ymax=ymax)
 
     return (t_passive, d_passive, t_active, d_active)
 
@@ -68,6 +68,9 @@ if __name__ == "__main__":
 
         time_list = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,
                      1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0]
+
+        # time_list = [0.25, 0.30, 0.35, 0.40, 0.45,
+        #              0.50, 0.55, 0.60, 0.65, 0.70, 0.75]
 
         for time in time_list:
             tp, dp, ta, da = sample_reverse_time(sim_object=mydiff, time=time)
