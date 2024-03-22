@@ -24,6 +24,8 @@ class Configs:
         if self.diffusion_calculation_type in ('numeric'):
             self.passive_training_iterations = int(
                 self.parser['passive noise']['training_iterations'])
+        else:
+            self.passive_training_iterations = None
 
         self.active_noise_Tp = float(self.parser['active noise']['Tp'])
         self.active_noise_Ta = float(self.parser['active noise']['Ta'])
@@ -31,6 +33,8 @@ class Configs:
         if self.diffusion_calculation_type in ('numeric'):
             self.active_training_iterations = int(
                 self.parser['active noise']['training_iterations'])
+        else:
+            self.active_training_iterations = None
 
         self.target_type = str(self.parser['target']['type'])
 

@@ -1,4 +1,5 @@
 from diffusion_numeric import DiffusionNumeric
+from diffusion_analytic import DiffusionAnalytic
 from noise import NoiseActive, NoisePassive
 from target_multi_gaussian import TargetMultiGaussian
 from target_quartic import TargetQuartic
@@ -43,29 +44,40 @@ if __name__ == "__main__":
 
         myDataProc = DataProc(xmin=myConfigs.xmin, xmax=myConfigs.xmax)
 
-        myDiffNum = DiffusionNumeric(ofile_base=myConfigs.ofile_base,
-                                     passive_noise=myPassiveNoise,
-                                     active_noise=myActiveNoise,
-                                     target=myTarget,
-                                     num_diffusion_steps=myConfigs.num_diffusion_steps,
-                                     dt=myConfigs.dt,
-                                     sample_dim=myConfigs.sample_dim,
-                                     data_proc=myDataProc)
+        if myConfigs.diffusion_calculation_type in ('numeric'):
+            myDiffNum = DiffusionNumeric(ofile_base=myConfigs.ofile_base,
+                                         passive_noise=myPassiveNoise,
+                                         active_noise=myActiveNoise,
+                                         target=myTarget,
+                                         num_diffusion_steps=myConfigs.num_diffusion_steps,
+                                         dt=myConfigs.dt,
+                                         sample_dim=myConfigs.sample_dim,
+                                         data_proc=myDataProc)
 
-        if myConfigs.passive_training_iterations is not None:
-            myDiffNum.train_diffusion_passive(
-                iterations=myConfigs.passive_training_iterations)
-        else:
-            myDiffNum.train_diffusion_passive(iterations=500)
+            if myConfigs.passive_training_iterations is not None:
+                myDiffNum.train_diffusion_passive(
+                    iterations=myConfigs.passive_training_iterations)
+            else:
+                myDiffNum.train_diffusion_passive(iterations=500)
+
+            if myConfigs.active_training_iterations is not None:
+                myDiffNum.train_diffusion_active(
+                    iterations=myConfigs.active_training_iterations)
+            else:
+                myDiffNum.train_diffusion_active(iterations=1000)
+
+        elif myConfigs.diffusion_calculation_type in ('analytic'):
+            myDiffNum = DiffusionAnalytic(ofile_base=myConfigs.ofile_base,
+                                          passive_noise=myPassiveNoise,
+                                          active_noise=myActiveNoise,
+                                          target=myTarget,
+                                          num_diffusion_steps=myConfigs.num_diffusion_steps,
+                                          dt=myConfigs.dt,
+                                          sample_dim=myConfigs.sample_dim,
+                                          data_proc=myDataProc)
 
         myDiffNum.sample_from_diffusion_passive()
         myDiffNum.calculate_passive_diff_list()
-
-        if myConfigs.active_training_iterations is not None:
-            myDiffNum.train_diffusion_active(
-                iterations=myConfigs.active_training_iterations)
-        else:
-            myDiffNum.train_diffusion_active(iterations=1000)
 
         myDiffNum.sample_from_diffusion_active()
         myDiffNum.calculate_active_diff_list()
