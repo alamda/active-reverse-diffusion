@@ -104,8 +104,8 @@ class DiffusionAnalytic(Diffusion):
 
         w = (1/self.active_noise.correlation_time)
 
-        M11 = (1/k)*Tx*(1-a*a) + (1/k)*Ty*(1/(w*(self.k+w)) + 4*a*b *
-                                           self.k/((self.k+w)*(self.k-w)**2) - (self.k*b**2 + w*a*a)/(w*(self.k-w)**2))
+        M11 = (1/self.k)*Tx*(1-a*a) + (1/self.k)*Ty*(1/(w*(self.k+w)) + 4*a*b *
+                                                     self.k/((self.k+w)*(self.k-w)**2) - (self.k*b**2 + w*a*a)/(w*(self.k-w)**2))
         M12 = (Ty/(w*(self.k**2 - w*w))) * \
             (self.k*(1-b*b) - w*(1 + b*b - 2*a*b))
 
@@ -115,11 +115,11 @@ class DiffusionAnalytic(Diffusion):
 
     def score_function_active(self, x=None, eta=None, t=None):
         try:
-            if self.target.type in ("gaussian", "Gaussian"):
+            if self.target.mu_list is not None:  # in ("gaussian", "Gaussian"):
                 a = np.exp(-self.k*t)
 
                 b = (np.exp(-t/self.active_noise.correlation_time) -
-                     np.exp(-self.k*t))/(k-(1/self.active_noise.correlation_time))
+                     np.exp(-self.k*t))/(self.k-(1/self.active_noise.correlation_time))
 
                 c = np.exp(-t/self.active_noise.correlation_time)
 
@@ -131,6 +131,7 @@ class DiffusionAnalytic(Diffusion):
                 Fx_den = 0
                 Feta_num = 0
                 Feta_den = 0
+
                 for mu, sigma, pi in zip(self.target.mu_list, self.target.sigma_list, self.target.pi_list):
                     h = sigma*sigma
 
@@ -154,19 +155,22 @@ class DiffusionAnalytic(Diffusion):
                     Feta_num = Feta_num + pi*h * \
                         np.power(Delta_eff, -1.5)*(K2*(x-a*mu) - K3*eta)*z
 
-                    Feta_den = Feta_den + p*h*np.power(Delta_eff, -0.5)*z
+                    Feta_den = Feta_den + pi*h*np.power(Delta_eff, -0.5)*z
 
                 Fx = Fx_num/Fx_den
 
                 Feta = Feta_num/Feta_den
 
-                return Fx, Feta
             else:
+                Fx = None
+                Feta = None
                 raise TypeError
+
+            return Fx, Feta
         except TypeError:
             print("Analytical diffusion implemented only for 'gaussian' target type")
 
-    def sample_from_diffusion_active(self):
+    def sample_from_diffusion_active(self, time=None):
         x = np.sqrt(self.active_noise.temperature.passive/self.k +
                     (self.active_noise.temperature.active /
                      (self.k**2 * self.active_noise.correlation_time + self.k)
@@ -193,7 +197,6 @@ class DiffusionAnalytic(Diffusion):
 
             time_now = t*self.dt
             time_step_list.append(time_now)
-            xin = torch.cat((x, eta), dim=1)
 
             Fx, Feta = self.score_function_active(x=x, eta=eta, t=time_now)
 

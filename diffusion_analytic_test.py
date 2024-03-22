@@ -107,12 +107,68 @@ def test_sample_from_diffusion_passive():
 
 
 def test_M_11_12_22():
-    pass
+    myFactory = DiffusionAnalyticTest_Factory()
+    myDiffNum = myFactory.create_test_objects()
+
+    t_idx = 1
+
+    M11, M12, M22 = myDiffNum.M_11_12_22(t_idx)
+
+    assert isinstance(M11, float)
+    assert isinstance(M12, float)
+    assert isinstance(M22, float)
 
 
 def test_score_function_active():
-    pass
+    myFactory = DiffusionAnalyticTest_Factory()
+    myDiffNum = myFactory.create_test_objects()
+
+    x = np.sqrt(myDiffNum.active_noise.temperature.passive/myDiffNum.k +
+                (myDiffNum.active_noise.temperature.active /
+                 (myDiffNum.k**2 * myDiffNum.active_noise.correlation_time + myDiffNum.k)
+                 )
+                ) * np.random.randn(myDiffNum.sample_dim)
+
+    eta = np.sqrt(myDiffNum.active_noise.temperature.active /
+                  myDiffNum.active_noise.correlation_time) * \
+        np.random.randn(myDiffNum.sample_dim)
+
+    time_now = 0.5
+
+    Fx, Feta = myDiffNum.score_function_active(x=x, eta=eta, t=time_now)
+
+    assert isinstance(Fx, np.ndarray)
+    assert Fx.shape == (myDiffNum.sample_dim,)
+    assert isinstance(Feta, np.ndarray)
+    assert Feta.shape == (myDiffNum.sample_dim,)
 
 
 def test_sample_from_diffusion_active():
-    pass
+    myFactory = DiffusionAnalyticTest_Factory()
+    myDiffNum = myFactory.create_test_objects()
+
+    time = 0.5
+
+    x, eta, reverse_diffusion_active_samples_x, reverse_diffusion_active_samples_eta = \
+        myDiffNum.sample_from_diffusion_active(time=time)
+
+    assert isinstance(x, np.ndarray)
+    assert x.shape == (myDiffNum.sample_dim,)
+
+    assert isinstance(eta, np.ndarray)
+    assert eta.shape == (myDiffNum.sample_dim,)
+
+    assert isinstance(reverse_diffusion_active_samples_x, list)
+    assert len(
+        reverse_diffusion_active_samples_x) == myDiffNum.num_active_reverse_diffusion_steps
+    for sample_t in reverse_diffusion_active_samples_x:
+        assert isinstance(sample_t, np.ndarray)
+        assert sample_t.shape == (myFactory.sample_dim,)
+
+    assert isinstance(reverse_diffusion_active_samples_eta, list)
+    assert len(
+        reverse_diffusion_active_samples_eta) == myDiffNum.num_active_reverse_diffusion_steps
+
+    for sample_t in reverse_diffusion_active_samples_eta:
+        assert isinstance(sample_t, np.ndarray)
+        assert sample_t.shape == (myFactory.sample_dim,)
