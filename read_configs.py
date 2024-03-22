@@ -15,18 +15,22 @@ class Configs:
         self.xmax = float(self.parser['sample']['xmax'])
         self.num_hist_bins = int(self.parser['sample']['num_hist_bins'])
 
+        self.diffusion_calculation_type = str(
+            self.parser['diffusion']['calc_type'])
         self.num_diffusion_steps = int(self.parser['diffusion']['num_steps'])
         self.dt = float(self.parser['diffusion']['dt'])
 
         self.passive_noise_T = float(self.parser['passive noise']['T'])
-        self.passive_training_iterations = int(
-            self.parser['passive noise']['training_iterations'])
+        if self.diffusion_calculation_type in ('numeric'):
+            self.passive_training_iterations = int(
+                self.parser['passive noise']['training_iterations'])
 
         self.active_noise_Tp = float(self.parser['active noise']['Tp'])
         self.active_noise_Ta = float(self.parser['active noise']['Ta'])
         self.active_noise_tau = float(self.parser['active noise']['tau'])
-        self.active_training_iterations = int(
-            self.parser['active noise']['training_iterations'])
+        if self.diffusion_calculation_type in ('numeric'):
+            self.active_training_iterations = int(
+                self.parser['active noise']['training_iterations'])
 
         self.target_type = str(self.parser['target']['type'])
 

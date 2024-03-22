@@ -4,7 +4,7 @@ import pathlib
 
 
 class ConfigsTest_Factory:
-    filename = "test"
+    filename = "test.tmp"
 
     ofile_base = "test_ofile_base"
 
@@ -13,6 +13,7 @@ class ConfigsTest_Factory:
     xmax = 2.0
     num_hist_bins = 20
 
+    calc_type = 'numeric'
     num_diffusion_steps = 123
     dt = 0.04
 
@@ -45,6 +46,7 @@ class ConfigsTest_Factory:
             f.write(f'{newline}')
 
             f.write(f'[diffusion]{newline}')
+            f.write(f'calc_type: {self.calc_type}{newline}')
             f.write(f'num_steps: {self.num_diffusion_steps}{newline}')
             f.write(f'dt: {self.dt}{newline}')
             f.write(f'{newline}')
