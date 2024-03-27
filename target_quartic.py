@@ -1,4 +1,4 @@
-from abstract_classes.target import TargetAbstract
+from target import TargetAbstract
 import torch
 import numpy as np
 import scipy.interpolate
