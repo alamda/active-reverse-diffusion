@@ -1,20 +1,9 @@
 # rendered pngs
-diff.png
-dsns.png
-multi_gauss_target_example.png
-quartic_target_example.png
 *.pkl
 runs/
-old_test/
 *.png
-out.gv
-
+*.gv
 *.dot
-abstract_classes/*.dot
-classes_concrete.png
-packages_concrete.png
-abstract_classes/classes_abstract.png
-abstract_classes/packages_abstract.png
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
