@@ -26,6 +26,9 @@ class DataProcTest_Factory:
     sigma_list = [0.5, 0.5, 0.5]
     pi_list = [1.0, 1.0, 1.0]
 
+    xmin = -5
+    xmax = 5
+
     myPassiveNoise = NoisePassive(T=passive_noise_T,
                                   dim=sample_dim)
 
@@ -37,7 +40,9 @@ class DataProcTest_Factory:
     myTarget = TargetMultiGaussian(mu_list=mu_list,
                                    sigma_list=sigma_list,
                                    pi_list=pi_list,
-                                   dim=sample_dim)
+                                   dim=sample_dim,
+                                   xmin=xmin,
+                                   xmax=xmax)
 
     myDiffNum = DiffusionNumeric(ofile_base=ofile_base,
                                  passive_noise=myPassiveNoise,
@@ -46,9 +51,6 @@ class DataProcTest_Factory:
                                  num_diffusion_steps=num_diffusion_steps,
                                  dt=dt,
                                  sample_dim=sample_dim)
-
-    xmin = -5
-    xmax = 5
 
     def create_test_object(self):
         myDataProc = DataProc(xmin=self.xmin, xmax=self.xmax)
