@@ -18,27 +18,6 @@ class DataProc():
         self.target_dsn = {'range': None,
                            'probabilities': None}
 
-    def approx_prob_dist(self, sample, sample_dim=None, bandwidth=0.2, kernel='gaussian'):
-        model = KernelDensity(bandwidth=bandwidth, kernel=kernel)
-
-        if type(sample) == torch.Tensor:
-            model.fit(sample.numpy())
-        else:
-            model.fit(sample)
-
-        if sample_dim is None:
-            sample_dim = sample.shape[0]
-
-        values = np.linspace(self.xmin, self.xmax, sample_dim)
-        values = values.reshape((len(values), 1))
-
-        log_probabilities = model.score_samples(values)
-
-        probabilities = np.exp(log_probabilities)
-        probabilities = probabilities/np.sum(probabilities)
-
-        return values, probabilities
-
     def calc_KL_divergence(self, target_sample, test_sample):
 
         if len(target_sample.shape) == 1:
@@ -63,8 +42,6 @@ class DataProc():
 
         b_target = (b_target[1:] + b_target[:-1])/2
         h_target = h_target / np.sum(h_target)
-
-        # v2, h2 = self.approx_prob_dist(test_sample, sample_dim=sample_dim)
 
         h_test, b_test = np.histogram(test_sample,
                                       bins=self.num_hist_bins,

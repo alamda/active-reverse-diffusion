@@ -66,23 +66,6 @@ def test_init():
     assert myDataProc.xmax == myFactory.xmax
 
 
-def test_approx_prob_dist():
-    myFactory = DataProcTest_Factory()
-    myDataProc = myFactory.create_test_object()
-
-    passive_models = myFactory.myDiffNum.train_diffusion_passive(iterations=10)
-
-    x, reverse_diffusion_passive_samples = myFactory.myDiffNum.sample_from_diffusion_passive(
-        passive_models)
-
-    values, probabilities = \
-        myDataProc.approx_prob_dist(reverse_diffusion_passive_samples[-1],
-                                    sample_dim=myFactory.sample_dim)
-
-    assert isinstance(values, np.ndarray)
-    assert isinstance(probabilities, np.ndarray)
-
-
 def test_calc_KL_divergence():
     myFactory = DataProcTest_Factory()
     myDataProc = myFactory.create_test_object()
