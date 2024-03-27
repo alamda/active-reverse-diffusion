@@ -13,11 +13,11 @@ if __name__ == "__main__":
 
         myPlotter = Plotter(diffusion_object=myDiffNum)
 
-        myPlotter.plot_loss(ymax=1)
+        # myPlotter.plot_loss(ymax=1)
 
         myPlotter.plot_sample_hist_pre_diffusion()
         myPlotter.plot_sample_hist_post_diffusion()
 
         myPlotter.plot_KL_diffusion()
 
-        myPlotter.plot_hist_animation(ymax=0.8)
+        myPlotter.plot_hist_animation(ymax=1.2)
