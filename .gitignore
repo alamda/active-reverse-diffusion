@@ -5,8 +5,9 @@ multi_gauss_target_example.png
 quartic_target_example.png
 *.pkl
 runs/
-test/
+old_test/
 *.png
+out.gv
 
 *.dot
 abstract_classes/*.dot

@@ -1,3 +1,5 @@
+from .context import data_proc, diffusion_numeric, noise, target_multi_gaussian
+
 from data_proc import DataProc
 from diffusion_numeric import DiffusionNumeric
 from noise import NoiseActive, NoisePassive
