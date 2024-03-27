@@ -28,6 +28,7 @@ class DataProcTest_Factory:
 
     xmin = -5
     xmax = 5
+    num_hist_bins = 20
 
     myPassiveNoise = NoisePassive(T=passive_noise_T,
                                   dim=sample_dim)
@@ -53,7 +54,9 @@ class DataProcTest_Factory:
                                  sample_dim=sample_dim)
 
     def create_test_object(self):
-        myDataProc = DataProc(xmin=self.xmin, xmax=self.xmax)
+        myDataProc = DataProc(xmin=self.xmin,
+                              xmax=self.xmax,
+                              num_hist_bins=self.num_hist_bins)
 
         return myDataProc
 
@@ -64,6 +67,7 @@ def test_init():
 
     assert myDataProc.xmin == myFactory.xmin
     assert myDataProc.xmax == myFactory.xmax
+    assert myDataProc.num_hist_bins == myFactory.num_hist_bins
 
 
 def test_calc_KL_divergence():
