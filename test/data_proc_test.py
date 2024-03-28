@@ -23,13 +23,13 @@ class DataProcTest_Factory:
     active_noise_Ta = 0.5
     tau = 0.1
 
-    mu_list = [-2.0, 0.0, 2.0]
-    sigma_list = [0.5, 0.5, 0.5]
-    pi_list = [1.0, 1.0, 1.0]
+    mu_list = [-1, 1]
+    sigma_list = [0.5, 0.5]
+    pi_list = [1.0, 1.0]
 
-    xmin = -2
-    xmax = 2
-    num_hist_bins = 20
+    xmin = -1
+    xmax = 1
+    num_hist_bins = 10
 
     myPassiveNoise = NoisePassive(T=passive_noise_T,
                                   dim=sample_dim)
@@ -75,47 +75,56 @@ def test_calc_KL_divergence():
     myFactory = DataProcTest_Factory()
     myDataProc = myFactory.create_test_object()
 
-    passive_models = myFactory.myDiffNum.train_diffusion_passive(iterations=10)
+    for _ in range(10):
+        passive_models = myFactory.myDiffNum.train_diffusion_passive(
+            iterations=10)
 
-    x, reverse_diffusion_passive_samples = myFactory.myDiffNum.sample_from_diffusion_passive(
-        passive_models)
+        x, reverse_diffusion_passive_samples = myFactory.myDiffNum.sample_from_diffusion_passive(
+            passive_models)
 
-    diff = myDataProc.calc_KL_divergence(reverse_diffusion_passive_samples[-1],
-                                         myFactory.myDiffNum.target.sample)
+        diff = myDataProc.calc_KL_divergence(reverse_diffusion_passive_samples[-1],
+                                             myFactory.myDiffNum.target.sample)
 
-    assert diff is not None
-    assert math.isfinite(diff)
+        assert diff is not None
+        assert math.isfinite(diff)
 
 
 def test_calc_diff_vs_t():
     myFactory = DataProcTest_Factory()
     myDataProc = myFactory.create_test_object()
 
-    passive_models = myFactory.myDiffNum.train_diffusion_passive(iterations=10)
+    for _ in range(10):
+        passive_models = myFactory.myDiffNum.train_diffusion_passive(
+            iterations=10)
 
-    x, reverse_diffusion_passive_samples = myFactory.myDiffNum.sample_from_diffusion_passive(
-        passive_models)
+        x, reverse_diffusion_passive_samples = myFactory.myDiffNum.sample_from_diffusion_passive(
+            passive_models)
 
-    difflist = myDataProc.calc_diff_vs_t(
-        myFactory.myDiffNum.target.sample, reverse_diffusion_passive_samples)
+        difflist = myDataProc.calc_diff_vs_t(
+            myFactory.myDiffNum.target.sample, reverse_diffusion_passive_samples)
 
-    assert len(difflist) == len(reverse_diffusion_passive_samples) - 1
-    assert len(difflist) == myFactory.num_diffusion_steps - 2
+        assert np.isfinite(np.array(difflist).all())
+
+        assert len(difflist) == len(reverse_diffusion_passive_samples) - 1
+        assert len(difflist) == myFactory.num_diffusion_steps - 2
 
 
 def test_calc_diff_vs_t_multiproc():
     myFactory = DataProcTest_Factory()
     myDataProc = myFactory.create_test_object()
 
-    passive_models = myFactory.myDiffNum.train_diffusion_passive(iterations=10)
+    for _ in range(10):
+        passive_models = myFactory.myDiffNum.train_diffusion_passive(
+            iterations=10)
 
-    x, reverse_diffusion_passive_samples = myFactory.myDiffNum.sample_from_diffusion_passive(
-        passive_models)
+        x, reverse_diffusion_passive_samples = myFactory.myDiffNum.sample_from_diffusion_passive(
+            passive_models)
 
-    with Pool(processes=4) as pool:
-        difflist = myDataProc.calc_diff_vs_t_multiproc(myFactory.myDiffNum.target.sample,
-                                                       reverse_diffusion_passive_samples,
-                                                       pool=pool)
+        with Pool(processes=4) as pool:
+            difflist = myDataProc.calc_diff_vs_t_multiproc(myFactory.myDiffNum.target.sample,
+                                                           reverse_diffusion_passive_samples,
+                                                           pool=pool)
+        assert np.isfinite(np.array(difflist).all())
 
-    assert len(difflist) == len(reverse_diffusion_passive_samples) - 1
-    assert len(difflist) == myFactory.num_diffusion_steps - 2
+        assert len(difflist) == len(reverse_diffusion_passive_samples) - 1
+        assert len(difflist) == myFactory.num_diffusion_steps - 2
