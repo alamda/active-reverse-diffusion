@@ -6,6 +6,7 @@ from noise import NoiseActive, NoisePassive
 from target_multi_gaussian import TargetMultiGaussian
 
 import numpy as np
+import math
 
 from multiprocess import Pool
 
@@ -26,8 +27,8 @@ class DataProcTest_Factory:
     sigma_list = [0.5, 0.5, 0.5]
     pi_list = [1.0, 1.0, 1.0]
 
-    xmin = -5
-    xmax = 5
+    xmin = -2
+    xmax = 2
     num_hist_bins = 20
 
     myPassiveNoise = NoisePassive(T=passive_noise_T,
@@ -79,10 +80,11 @@ def test_calc_KL_divergence():
     x, reverse_diffusion_passive_samples = myFactory.myDiffNum.sample_from_diffusion_passive(
         passive_models)
 
-    diff = myDataProc.calc_KL_divergence(
-        reverse_diffusion_passive_samples[-1], myFactory.myDiffNum.target.sample)
+    diff = myDataProc.calc_KL_divergence(reverse_diffusion_passive_samples[-1],
+                                         myFactory.myDiffNum.target.sample)
 
-    assert isinstance(diff, float)
+    assert diff is not None
+    assert math.isfinite(diff)
 
 
 def test_calc_diff_vs_t():

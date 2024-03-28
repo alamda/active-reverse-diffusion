@@ -51,19 +51,18 @@ class DataProc():
         b_test = (b_test[1:] + b_test[:-1])/2
         h_test = h_test / np.sum(h_test)
 
-        try:
-            if not np.all(h_target >= 0):
-                raise TypeError
-        except TypeError:
-            print("Target sample histogram must have positive values")
+        diff = None
 
         try:
-            if not np.all(h_test >= 0):
+            rel_entr = special.rel_entr(h_test, h_target)
+
+            if np.isfinite(rel_entr).all():
+                diff = np.sum(special.rel_entr(h_test, h_target))
+            else:
                 raise TypeError
         except TypeError:
-            print("Test sample histogram must have positive values")
-
-        diff = np.sum(special.rel_entr(h_test, h_target))
+            print("One or more values in KL divergence is infinite."
+                  "Adjust histogram range.")
 
         return diff
 
