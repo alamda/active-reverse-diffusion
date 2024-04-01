@@ -50,6 +50,9 @@ class TargetMultiGaussian2D(TargetAbstract):
         mu_y_list = self.mu_y_list if mu_y_list is None else mu_y_list
         self.mu_y_list = mu_y_list
 
+        pi_list = self.pi_list if pi_list is None else pi_list
+        self.pi_list = pi_list
+
         dim = self.dim if dim is None else dim
         self.dim = dim
 
