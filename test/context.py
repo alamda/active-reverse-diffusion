@@ -10,3 +10,4 @@ import noise
 import read_configs
 import target_multi_gaussian
 import target_quartic
+import target_multi_gaussian_2D
