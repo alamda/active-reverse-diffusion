@@ -115,8 +115,10 @@ class TargetMultiGaussian2D(TargetAbstract):
         x_samples = [x_arr[idx_arr[idx][0]] for idx in idx_samples]
         y_samples = [y_arr[idx_arr[idx][1]] for idx in idx_samples]
 
-        self.samples = list(zip(x_samples, y_samples))
-
+        samples = list(zip(x_samples, y_samples))
+        
+        self.samples = [list(s) for s in samples]
+        
         # https://numpy.org/doc/stable/reference/generated/numpy.histogram2d.html
 
         num_bins = 50
