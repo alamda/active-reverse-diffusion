@@ -87,13 +87,19 @@ class TargetMultiGaussian2D(TargetAbstract):
         self.y_arr = y_arr
         self.prob_arr = z_arr
 
+        sim_param_string = f"mu_x: {mu_x_list}, mu_y: {mu_y_list}, sigma: {sigma_list}"
+
         fig, ax = plt.subplots()
+
+        ax.set_title(sim_param_string +
+                     "\n" +
+                     f"probability distribution, nx: {num_points_x}, ny: {num_points_y}")
 
         c = ax.pcolormesh(x_arr, y_arr, z_arr)
         ax.axis([x_arr.min(), x_arr.max(), y_arr.min(), y_arr.max()])
         fig.colorbar(c, ax=ax)
 
-        plt.show()
+        plt.savefig("target_prob_2D.png")
 
         plt.close(fig)
 
@@ -106,10 +112,14 @@ class TargetMultiGaussian2D(TargetAbstract):
         x_samples = [x_arr[idx_arr[idx][0]] for idx in idx_samples]
         y_samples = [y_arr[idx_arr[idx][1]] for idx in idx_samples]
 
+        self.samples = list(zip(x_samples, y_samples))
+
         # https://numpy.org/doc/stable/reference/generated/numpy.histogram2d.html
 
+        num_bins = 50
+
         hist, x_bins, y_bins = np.histogram2d(
-            x_samples, y_samples, bins=50, density=True)
+            x_samples, y_samples, bins=num_bins, density=True)
 
         # TODO: check if T is needed
         # hist = hist.T
@@ -118,12 +128,16 @@ class TargetMultiGaussian2D(TargetAbstract):
 
         fig, ax = plt.subplots()
 
-        plt.imshow(hist, extent=[x_bins[0], x_bins[-1], y_bins[0], y_bins[-1]])
+        ax.set_title(sim_param_string +
+                     "\n" +
+                     f"{self.dim} samples, {num_bins} bins")
 
-        # ax.pcolormesh(x_mg, y_mg, hist)
+        # plt.imshow(hist, extent=[x_bins[0], x_bins[-1], y_bins[0], y_bins[-1]])
 
-        # ax.set_aspect('equal')
+        c = ax.pcolormesh(x_mg, y_mg, hist)
 
-        plt.show()
+        fig.colorbar(c, ax=ax)
+
+        plt.savefig("target_sample_2D.png")
 
         plt.close(fig)
