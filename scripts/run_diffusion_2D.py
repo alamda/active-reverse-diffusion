@@ -6,7 +6,7 @@ import sys
 
 sys.path.insert(0, '../src/')
 
-from data_proc import DataProc
+from data_proc_2D import DataProc2D
 from target_multi_gaussian_2D import TargetMultiGaussian2D
 from noise import NoiseActive, NoisePassive
 from diffusion_numeric import DiffusionNumeric
@@ -31,11 +31,13 @@ if __name__ == "__main__":
 
     xmin = -2
     xmax = 2
-    ymin = -2
-    ymax = 2
+    ymin = -1
+    ymax = 1
 
     num_diffusion_steps = 100
     dt = 0.005
+    
+    num_hist_bins = 50
 
     myPassiveNoise = NoisePassive(T=passive_noise_T,
                                   dim=sample_dim)
@@ -55,7 +57,9 @@ if __name__ == "__main__":
 
     myTarget.gen_target_sample()
 
-    myDataProc = DataProc(xmin=xmin, xmax=xmax)
+    myDataProc = DataProc2D(xmin=xmin, xmax=xmax, 
+                            ymin=ymin, ymax=ymax, 
+                            num_hist_bins=num_hist_bins)
 
     myDiffNum = DiffusionNumeric(ofile_base=ofile_base,
                                  passive_noise=myPassiveNoise,
@@ -65,5 +69,14 @@ if __name__ == "__main__":
                                  dt=dt,
                                  sample_dim=sample_dim,
                                  data_proc=myDataProc)
+    
+    t1 = myTarget.samples
+    
+    myTarget.gen_target_sample()
+    
+    t2 = myTarget.samples
+    
+    
+    diff = myDataProc.calc_KL_divergence(t1, t2)
     
     breakpoint()
