@@ -10,6 +10,7 @@ from data_proc_2D import DataProc2D
 from target_multi_gaussian_2D import TargetMultiGaussian2D
 from noise import NoiseActive, NoisePassive
 from diffusion_numeric import DiffusionNumeric
+from diffusion_2D import Diffusion2D
 
 
 
@@ -61,7 +62,7 @@ if __name__ == "__main__":
                             ymin=ymin, ymax=ymax, 
                             num_hist_bins=num_hist_bins)
 
-    myDiffNum = DiffusionNumeric(ofile_base=ofile_base,
+    myDiffNum = Diffusion2D(ofile_base=ofile_base,
                                  passive_noise=myPassiveNoise,
                                  active_noise=myActiveNoise,
                                  target=myTarget,
@@ -70,8 +71,19 @@ if __name__ == "__main__":
                                  sample_dim=sample_dim,
                                  data_proc=myDataProc)
     
-    myDiffNum.forward_diffusion_passive()
+    ps = myDiffNum.forward_diffusion_passive()
     
+    fig, axs = plt.subplots(1,2)
     
+    ps_first = ps[0]
+    ps_last = ps[-1]
+    
+    hist_first, xb_first, yb_first = np.histogram2d(ps_first[:,0], ps_first[:,1], density=True)
+    hist_last, xb_last, yb_last = np.histogram2d(ps_last[:,0], ps_last[:,1], density=True)
+    
+    axs[0].imshow(hist_first)
+    axs[1].imshow(hist_last)
+    
+    plt.show()
     
     breakpoint()

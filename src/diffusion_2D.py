@@ -10,8 +10,8 @@ import torch
 
 class Diffusion2D(AbstractBaseClass):
     def __init__(self, ofile_base="", passive_noise=None, active_noise=None, 
-                 num_diffusion_steps=None, dt=None, k=1, sample_dim=None, 
-                 data_proc=None, diffusion_type=None):
+                 target=None, num_diffusion_steps=None, dt=None, k=1, 
+                 sample_dim=None, data_proc=None, diffusion_type=None):
         
         self.ofile_base = ofile_base
         
@@ -51,4 +51,19 @@ class Diffusion2D(AbstractBaseClass):
     def forward_diffusion_passive(self):
         forward_diffusion_sample_list = [self.target.sample]
         
+        sample_t = self.target.sample
+        
+        sample_shape = sample_t.shape
+
+        for t_idx in range(self.num_diffusion_steps):
+            sample_t = sample_t - self.dt*sample_t + \
+                    np.sqrt(2*self.passive_noise.temperature*self.dt) * \
+                    np.random.randn(sample_shape[0], sample_shape[1])
+
+            forward_diffusion_sample_list.append(sample_t)
+        
+       
+        self.passive_forward_samples = forward_diffusion_sample_list
+        
+        return self.passive_forward_samples
         
