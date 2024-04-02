@@ -42,8 +42,6 @@ class DataProc2D:
             
         h_test /= h_test.sum().sum()
         
-        breakpoint()
-        
         diff = None
         
         try:
