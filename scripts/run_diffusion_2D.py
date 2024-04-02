@@ -70,13 +70,8 @@ if __name__ == "__main__":
                                  sample_dim=sample_dim,
                                  data_proc=myDataProc)
     
-    t1 = myTarget.samples
-    
-    myTarget.gen_target_sample()
-    
-    t2 = myTarget.samples
+    myDiffNum.forward_diffusion_passive()
     
     
-    diff = myDataProc.calc_KL_divergence(t1, t2)
     
     breakpoint()
