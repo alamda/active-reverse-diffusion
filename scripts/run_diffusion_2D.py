@@ -70,39 +70,8 @@ if __name__ == "__main__":
                                  dt=dt,
                                  sample_dim=sample_dim,
                                  data_proc=myDataProc)
-    
+        
     if False:
-        ps = myDiffNum.forward_diffusion_passive()
-        
-        fig, axs = plt.subplots(1,2)
-        
-        ps_first = ps[0]
-        ps_last = ps[-1]
-        
-        hist_first, xb_first, yb_first = np.histogram2d(ps_first[:,0], ps_first[:,1], 
-                                                        density=True,
-                                                        bins=num_hist_bins,
-                                                        range=[[xmin, xmax], [ymin, ymax]])
-        
-        hist_last, xb_last, yb_last = np.histogram2d(ps_last[:,0], ps_last[:,1], 
-                                                     density=True,
-                                                     bins=num_hist_bins,
-                                                     range=[[xmin, xmax], [ymin, ymax]])
-        
-        axs[0].imshow(hist_first, extent=[xb_first[0], xb_first[-1], 
-                                          yb_first[0], yb_first[-1]])
-        
-        axs[1].imshow(hist_last, extent=[xb_last[0], xb_last[-1], 
-                                          yb_last[0], yb_last[-1]])
-        
-        for ax in axs:
-            ax.set_aspect('equal')
-        
-        plt.show()
-        
-        plt.close(fig)
-        
-    if True:
         forward_diffusion_samples = myDiffNum.forward_diffusion_passive()
         
         forward_first = forward_diffusion_samples[0]
@@ -175,9 +144,6 @@ if __name__ == "__main__":
         
         axs[2,1].axis('off')
         
-        # for ax in axs:
-        #     ax.set_aspect('equal')
-            
         fig.tight_layout()
         
         plt.savefig("passive_rev.png")
