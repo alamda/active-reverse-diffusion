@@ -26,6 +26,11 @@ class DiffusionNumeric2D(Diffusion2D):
         
         self.passive_models = None
         self.passive_loss_history = None
+        
+        self.active_models_x = None
+        self.active_models_eta = None
+        self.active_loss_history_x = None
+        self.active_loss_history_eta = None
                 
     def compute_loss_passive(self, forward_samples, t, score_model):
         
