@@ -35,7 +35,7 @@ if __name__ == "__main__":
     ymin = -1
     ymax = 1
 
-    num_diffusion_steps = 100
+    num_diffusion_steps = 2
     dt = 0.005
     
     num_hist_bins = 10
@@ -70,22 +70,44 @@ if __name__ == "__main__":
                                  dt=dt,
                                  sample_dim=sample_dim,
                                  data_proc=myDataProc)
+
+     
+    if True:
+        forward_diffusion_samples_pass = myDiffNum.forward_diffusion_passive()
+        forward_diffusion_samples_act = myDiffNum.forward_diffusion_active()
         
-    if False:
-        forward_diffusion_samples = myDiffNum.forward_diffusion_passive()
+        forward_pass_first = forward_diffusion_samples_pass[0]
+        forward_pass_last = forward_diffusion_samples_pass[-1]
         
-        forward_first = forward_diffusion_samples[0]
-        forward_last = forward_diffusion_samples[-1]
-        
-        hist_forw_first, xb_forw_first, yb_forw_first = np.histogram2d(forward_first[:,0], forward_first[:,1],
+        hist_forw_pass_first, xb_forw_pass_first, yb_forw_pass_first = np.histogram2d(forward_pass_first[:,0], 
+                                                                                      forward_pass_first[:,1],
                                                                        density=True,
                                                                        bins=num_hist_bins,
                                                                        range=[[xmin, xmax], [ymin, ymax]])
         
-        hist_forw_last, xb_forw_last, yb_forw_last = np.histogram2d(forward_last[:,0], forward_last[:,1],
+        hist_forw_pass_last, xb_forw_pass_last, yb_forw_pass_last = np.histogram2d(forward_pass_last[:,0], 
+                                                                                   forward_pass_last[:,1],
                                                                 density=True,
                                                                 bins=num_hist_bins,
                                                                 range=[[xmin, xmax], [ymin, ymax]])
+        
+        forward_act, _ = forward_diffusion_samples_act
+        
+        forward_act_first = forward_act[0]
+        forward_act_last = forward_act[-1]
+
+        hist_forw_act_first, xb_forw_act_first, yb_forw_act_first = np.histogram2d(forward_act_first[:,0], 
+                                                                                      forward_act_first[:,1],
+                                                                       density=True,
+                                                                       bins=num_hist_bins,
+                                                                       range=[[xmin, xmax], [ymin, ymax]])
+        
+        hist_forw_act_last, xb_forw_act_last, yb_forw_act_last = np.histogram2d(forward_act_last[:,0], 
+                                                                                   forward_act_last[:,1],
+                                                                density=True,
+                                                                bins=num_hist_bins,
+                                                                range=[[xmin, xmax], [ymin, ymax]])
+        
         
         myDiffNum.target.gen_target_sample(num_bins=num_hist_bins)
         # myDiffNum.num_diffusion_steps=1
@@ -96,16 +118,18 @@ if __name__ == "__main__":
         with open(f"{ofile_base}.pkl", 'wb') as f:
             pickle.dump(myDiffNum, f)
               
-        rev_first = myDiffNum.passive_reverse_samples[0]
+        rev_pass_first = myDiffNum.passive_reverse_samples[0]
         
-        rev_last = myDiffNum.passive_reverse_samples[-1]
+        rev_pass_last = myDiffNum.passive_reverse_samples[-1]
         
-        hist_rev_first, xb_rev_first, yb_rev_first = np.histogram2d(rev_first[:,0], rev_first[:,1], 
+        hist_rev_pass_first, xb_rev_pass_first, yb_rev_pass_first = np.histogram2d(rev_pass_first[:,0], 
+                                                                                   rev_pass_first[:,1], 
                                                         density=True,
                                                         bins=num_hist_bins,
                                                         range=[[xmin, xmax], [ymin, ymax]])
         
-        hist_rev_last, xb_rev_last, yb_rev_last = np.histogram2d(rev_last[:,0], rev_last[:,1], 
+        hist_rev_pass_last, xb_rev_pass_last, yb_rev_pass_last = np.histogram2d(rev_pass_last[:,0], 
+                                                                                rev_pass_last[:,1], 
                                                      density=True,
                                                      bins=num_hist_bins,
                                                      range=[[xmin, xmax], [ymin, ymax]])
@@ -117,36 +141,45 @@ if __name__ == "__main__":
                                                            bins=num_hist_bins,
                                                            range=[[xmin, xmax], [ymin, ymax]])
         
-        fig, axs = plt.subplots(3, 2)
+        fig, axs = plt.subplots(3, 5)
         
         fig.set_size_inches(5,7)
         
-        axs[0,0].imshow(hist_forw_first) #, extent=[xb_forw_first[0], xb_forw_first[-1],
-                                               #  yb_forw_first[0], yb_forw_first[-1]])
+        axs[0,0].imshow(hist_forw_pass_first) 
+        axs[0,0].set_title('pass_forw[0]')
         
-        axs[0,0].set_title('forw[0]')
+        axs[0,1].imshow(hist_forw_pass_last)
+        axs[0,1].set_title('pass_forw[-1]')
         
-        axs[0,1].imshow(hist_forw_last) #, extent=[xb_forw_last[0], xb_forw_last[-1],
-                                         #     yb_forw_last[0], yb_forw_last[-1]])
+        axs[0,2].axis('off')
         
-        axs[0,1].set_title('forw[-1]')
+        axs[0,3].imshow(hist_forw_act_first)
+        axs[0,3].set_title('act_forw[0]')
         
-        axs[1,0].imshow(hist_rev_first) #, extent=[xb_rev_first[0], xb_rev_first[-1], 
-                                        #  yb_rev_first[0], yb_rev_first[-1]])
+        axs[0,4].imshow(hist_forw_act_last)
+        axs[0,4].set_title('act_forw[-1]')
         
-        axs[1,0].set_title('rev[0]')
+        ###
         
-        axs[1,1].imshow(hist_rev_last) #, extent=[xb_rev_last[0], xb_rev_last[-1], 
-                                        #  yb_rev_last[0], yb_rev_last[-1]])
+        axs[1,0].imshow(hist_rev_pass_first)
+        axs[1,0].set_title('pass_rev[0]')
         
-        axs[1,1].set_title('rev[-1]')
+        axs[1,1].imshow(hist_rev_pass_last)
+        axs[1,1].set_title('pass_rev[-1]')
         
-        axs[2,0].imshow(hist_target) #, extent=[xb_target[0], xb_target[-1], 
-                                      #    yb_target[0], yb_target[-1]])
+        axs[1,2].axis('off')
+        axs[1,3].axis('off')
+        axs[1,4].axis('off')
         
+        ###
+        
+        axs[2,0].imshow(hist_target)
         axs[2,0].set_title('target')
         
         axs[2,1].axis('off')
+        axs[2,2].axis('off')
+        axs[2,3].axis('off')
+        axs[2,4].axis('off')
         
         fig.tight_layout()
         
@@ -154,7 +187,7 @@ if __name__ == "__main__":
         
         plt.close(fig)
 
-    if True:
+    if False:
         with open("data.pkl", 'rb') as f:
             myDiffNum = pickle.load(f)
         

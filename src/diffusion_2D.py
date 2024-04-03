@@ -70,6 +70,44 @@ class Diffusion2D(AbstractBaseClass):
     @abstractmethod
     def sample_from_diffusion_passive(self):
         """Reverse diffusion process with passive noise"""
+        
+    def forward_diffusion_active(self):
+        self.target.sample = torch.from_numpy(self.target.sample)
+        
+        eta = torch.normal(torch.zeros_like(self.target.sample),
+                           np.sqrt(self.active_noise.temperature.active /
+                                   self.active_noise.correlation_time)
+                           * torch.ones_like(self.target.sample)
+                           )
+        samples = [self.target.sample]
+        eta_samples = [eta]
+        sample_t = self.target.sample
+
+        for t_idx in range(self.num_diffusion_steps):
+            sample_t = sample_t - self.dt*sample_t + self.dt*eta + \
+                np.sqrt(2*self.active_noise.temperature.passive*self.dt) * \
+                torch.normal(torch.zeros_like(self.target.sample),
+                             torch.ones_like(self.target.sample))
+
+            eta = eta - (1/self.active_noise.correlation_time)*self.dt*eta + \
+                (1/self.active_noise.correlation_time) * \
+                np.sqrt(2*self.active_noise.temperature.active*self.dt) * \
+                torch.normal(torch.zeros_like(eta), torch.ones_like(eta))
+
+            samples.append(sample_t)
+            eta_samples.append(eta)
+
+        samples = [s.reshape((self.sample_dim, 2)).type(torch.DoubleTensor)
+                   for s in samples]
+
+        eta_samples = [s.reshape((self.sample_dim, 2)).type(torch.DoubleTensor)
+                       for s in eta_samples]
+
+        self.active_forward_samples_x = samples
+        self.active_forward_samples_eta = eta_samples
+
+        return samples, eta_samples
+
 
     def calculate_passive_diff_list(self, multiproc=True):
         if self.data_proc is not None:
