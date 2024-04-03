@@ -91,6 +91,9 @@ if __name__ == "__main__":
         # myDiffNum.num_diffusion_steps=1
         myDiffNum.train_diffusion_passive(iterations=1000)
         myDiffNum.sample_from_diffusion_passive()
+        
+        with open(f"{ofile_base}.pkl", 'wb') as f:
+            pickle.dump(myDiffNum, f)
               
         rev_first = myDiffNum.passive_reverse_samples[0]
         
