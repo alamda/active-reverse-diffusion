@@ -101,7 +101,7 @@ class DiffusionNumeric2D(Diffusion2D):
                 optim_x.zero_grad()
                 optim_y.zero_grad()
 
-                loss_x, loss_y, l, scr = self.compute_loss_passive(forward_samples,
+                loss_x, loss_y, l_x, scr_x = self.compute_loss_passive(forward_samples,
                                                          t_idx,
                                                          score_model_x, 
                                                          score_model_y)
