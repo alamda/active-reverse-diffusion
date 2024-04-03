@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.special as special
 
+import tqdm
 
 class DataProc2D:
     def __init__(self, xmin=-2, xmax=2,
@@ -58,4 +59,63 @@ class DataProc2D:
         
         return diff
             
+    def calc_diff_vs_t(self, target_sample,
+                       diffusion_sample_list,
+                       multiproc=False,
+                       pool=None):
         
+        t_list = []
+        
+        diff_list = []
+
+        num_diffusion_steps = len(diffusion_sample_list)
+
+        proc_list = None
+
+        if multiproc and (pool is not None):
+            print("Calculating KL divergences with multiprocessing enabled")
+
+            proc_list = []
+
+            for t_idx in range(num_diffusion_steps - 1):
+
+                proc = pool.apply_async(self.calc_KL_divergence,
+                                        (target_sample, diffusion_sample_list[t_idx]))
+
+                proc_list.append(proc)
+                t_list.append(t_idx)
+
+            with tqdm.tqdm(total=len(proc_list)) as pbar:
+                for proc in proc_list:
+                    diff_list.append(proc.get())
+                    pbar.update()
+        else:
+            with tqdm.tqdm(total=num_diffusion_steps) as pbar:
+                for t_idx in range(0, num_diffusion_steps-1):
+                    diff = self.calc_KL_divergence(target_sample,
+                                                   diffusion_sample_list[t_idx])
+
+                    t_list.append(t_idx)
+                    diff_list.append(diff)
+                    pbar.update()
+
+        self.t_list = t_list
+        self.diff_list = diff_list
+
+        return diff_list
+
+    def calc_diff_vs_t_multiproc(self, target_sample, diffusion_sample_list, pool=None):
+        if pool is not None:
+            print("Calculating KL divergences with multiprocessing enabled")
+
+            diff_list = self.calc_diff_vs_t(target_sample,
+                                            diffusion_sample_list,
+                                            multiproc=True,
+                                            pool=pool)
+
+            return diff_list
+        else:
+            print(
+                "No pool object provided, not using multiprocessing to calculate KL divergences")
+
+            return self.calc_diff_vs_t(target_sample, diffusion_sample_list)

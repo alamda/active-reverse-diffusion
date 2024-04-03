@@ -1,7 +1,7 @@
 from abc import ABC as AbstractBaseClass
 from abc import abstractmethod
 
-import multiprocessing
+import multiprocess
 from multiprocess import Pool
 
 import numpy as np
@@ -67,3 +67,18 @@ class Diffusion2D(AbstractBaseClass):
         
         return self.passive_forward_samples
         
+    def calculate_passive_diff_list(self, multiproc=True):
+        if self.data_proc is not None:
+            if multiproc == True:
+
+                num_cpus = multiprocess.cpu_count()
+                num_procs = num_cpus - 4
+
+                with Pool() as pool:
+                    self.passive_diff_list = \
+                        self.data_proc.calc_diff_vs_t_multiproc(self.target.sample,
+                                                                self.passive_reverse_samples,
+                                                                pool=pool)
+            else:
+                self.passive_diff_list = self.data_proc.calc_diff_vs_t(self.target.sample,
+                                                                       self.passive_reverse_samples)

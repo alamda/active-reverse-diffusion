@@ -91,6 +91,7 @@ if __name__ == "__main__":
         # myDiffNum.num_diffusion_steps=1
         myDiffNum.train_diffusion_passive(iterations=1000)
         myDiffNum.sample_from_diffusion_passive()
+        myDiffNum.calculate_passive_diff_list()
         
         with open(f"{ofile_base}.pkl", 'wb') as f:
             pickle.dump(myDiffNum, f)
@@ -152,5 +153,23 @@ if __name__ == "__main__":
         plt.savefig("passive_rev.png")
         
         plt.close(fig)
+
+    if True:
+        with open("data.pkl", 'rb') as f:
+            myDiffNum = pickle.load(f)
+        
+        fig, ax = plt.subplots()
+        
+        t_list_passive = np.arange(
+            0, len(myDiffNum.passive_diff_list))*myDiffNum.dt
+        
+        ax.scatter(t_list_passive, 
+                   np.log(myDiffNum.passive_diff_list),
+                   label="passive")
+        
+        ax.legend()
+        
+        plt.savefig('diff.png')
+        
+        plt.close(fig)
     
-    # breakpoint()
