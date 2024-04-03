@@ -66,7 +66,11 @@ class Diffusion2D(AbstractBaseClass):
         self.passive_forward_samples = forward_diffusion_sample_list
         
         return self.passive_forward_samples
-        
+    
+    @abstractmethod
+    def sample_from_diffusion_passive(self):
+        """Reverse diffusion process with passive noise"""
+
     def calculate_passive_diff_list(self, multiproc=True):
         if self.data_proc is not None:
             if multiproc == True:
