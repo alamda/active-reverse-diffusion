@@ -25,7 +25,7 @@ if __name__ == "__main__":
     active_noise_Ta = 1.0
     active_noise_tau = 0.25
 
-    mu_x_list = [-1.2, 1.2]
+    mu_x_list = [-2, 2]
     mu_y_list = [0, 0]
     sigma_list = [1, 1]
     pi_list = [1, 1]
@@ -35,10 +35,10 @@ if __name__ == "__main__":
     ymin = -1
     ymax = 1
 
-    num_diffusion_steps = 50
-    dt = 0.005
+    num_diffusion_steps = 100
+    dt = 0.01
     
-    num_hist_bins = 50
+    num_hist_bins = 10
 
     myPassiveNoise = NoisePassive(T=passive_noise_T,
                                   dim=sample_dim)
@@ -103,25 +103,38 @@ if __name__ == "__main__":
         plt.close(fig)
         
     if True:
-        myDiffNum.train_diffusion_passive()
+        forward_diffusion_samples = myDiffNum.forward_diffusion_passive()
+        
+        forward_first = forward_diffusion_samples[0]
+        forward_last = forward_diffusion_samples[-1]
+        
+        hist_forw_first, xb_forw_first, yb_forw_first = np.histogram2d(forward_first[:,0], forward_first[:,1],
+                                                                       density=True,
+                                                                       bins=num_hist_bins,
+                                                                       range=[[xmin, xmax], [ymin, ymax]])
+        
+        hist_forw_last, xb_forw_last, yb_forw_last = np.histogram2d(forward_last[:,0], forward_last[:,1],
+                                                                density=True,
+                                                                bins=num_hist_bins,
+                                                                range=[[xmin, xmax], [ymin, ymax]])
+        
+        myDiffNum.target.gen_target_sample(num_bins=num_hist_bins)
+        # myDiffNum.num_diffusion_steps=1
+        myDiffNum.train_diffusion_passive(iterations=100)
         myDiffNum.sample_from_diffusion_passive()
-        
-        fig, axs = plt.subplots(3,1)
-        
-        fig.set_size_inches(5,10)
-        
+              
         rev_first = np.column_stack((myDiffNum.passive_reverse_samples_x[0],
                                     myDiffNum.passive_reverse_samples_y[0]))
         
         rev_last = np.column_stack((myDiffNum.passive_reverse_samples_x[-1],
                                    myDiffNum.passive_reverse_samples_y[-1]))
         
-        hist_first, xb_first, yb_first = np.histogram2d(rev_first[:,0], rev_first[:,1], 
+        hist_rev_first, xb_rev_first, yb_rev_first = np.histogram2d(rev_first[:,0], rev_first[:,1], 
                                                         density=True,
                                                         bins=num_hist_bins,
                                                         range=[[xmin, xmax], [ymin, ymax]])
         
-        hist_last, xb_last, yb_last = np.histogram2d(rev_last[:,0], rev_last[:,1], 
+        hist_rev_last, xb_rev_last, yb_rev_last = np.histogram2d(rev_last[:,0], rev_last[:,1], 
                                                      density=True,
                                                      bins=num_hist_bins,
                                                      range=[[xmin, xmax], [ymin, ymax]])
@@ -133,23 +146,39 @@ if __name__ == "__main__":
                                                            bins=num_hist_bins,
                                                            range=[[xmin, xmax], [ymin, ymax]])
         
-        axs[0].imshow(hist_first, extent=[xb_first[0], xb_first[-1], 
-                                          yb_first[0], yb_first[-1]])
+        fig, axs = plt.subplots(3, 2)
         
-        axs[0].set_title('rev[0]')
+        fig.set_size_inches(5,7)
         
-        axs[1].imshow(hist_last, extent=[xb_last[0], xb_last[-1], 
-                                          yb_last[0], yb_last[-1]])
+        axs[0,0].imshow(hist_forw_first) #, extent=[xb_forw_first[0], xb_forw_first[-1],
+                                               #  yb_forw_first[0], yb_forw_first[-1]])
         
-        axs[1].set_title('rev[-1]')
+        axs[0,0].set_title('forw[0]')
         
-        axs[2].imshow(hist_target, extent=[xb_target[0], xb_target[-1], 
-                                          yb_target[0], yb_target[-1]])
+        axs[0,1].imshow(hist_forw_last) #, extent=[xb_forw_last[0], xb_forw_last[-1],
+                                         #     yb_forw_last[0], yb_forw_last[-1]])
         
-        axs[2].set_title('target')
+        axs[0,1].set_title('forw[-1]')
         
-        for ax in axs:
-            ax.set_aspect('equal')
+        axs[1,0].imshow(hist_rev_first) #, extent=[xb_rev_first[0], xb_rev_first[-1], 
+                                        #  yb_rev_first[0], yb_rev_first[-1]])
+        
+        axs[1,0].set_title('rev[0]')
+        
+        axs[1,1].imshow(hist_rev_last) #, extent=[xb_rev_last[0], xb_rev_last[-1], 
+                                        #  yb_rev_last[0], yb_rev_last[-1]])
+        
+        axs[1,1].set_title('rev[-1]')
+        
+        axs[2,0].imshow(hist_target) #, extent=[xb_target[0], xb_target[-1], 
+                                      #    yb_target[0], yb_target[-1]])
+        
+        axs[2,0].set_title('target')
+        
+        axs[2,1].axis('off')
+        
+        # for ax in axs:
+        #     ax.set_aspect('equal')
             
         fig.tight_layout()
         
