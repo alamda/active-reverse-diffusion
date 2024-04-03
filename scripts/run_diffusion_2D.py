@@ -35,7 +35,7 @@ if __name__ == "__main__":
     ymin = -1
     ymax = 1
 
-    num_diffusion_steps = 10
+    num_diffusion_steps = 100
     dt = 0.005
     
     num_hist_bins = 10
@@ -120,7 +120,7 @@ if __name__ == "__main__":
             myDiffNum.sample_from_diffusion_passive()
             myDiffNum.calculate_passive_diff_list()
             
-            myDiffNum.train_diffusion_active(iterations=1000)
+            myDiffNum.train_diffusion_active(iterations=2000)
             myDiffNum.sample_from_diffusion_active()
             myDiffNum.calculate_active_diff_list()
             
