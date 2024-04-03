@@ -36,7 +36,7 @@ if __name__ == "__main__":
     ymax = 1
 
     num_diffusion_steps = 100
-    dt = 0.01
+    dt = 0.005
     
     num_hist_bins = 10
 
@@ -120,14 +120,12 @@ if __name__ == "__main__":
         
         myDiffNum.target.gen_target_sample(num_bins=num_hist_bins)
         # myDiffNum.num_diffusion_steps=1
-        myDiffNum.train_diffusion_passive(iterations=100)
+        myDiffNum.train_diffusion_passive(iterations=1000)
         myDiffNum.sample_from_diffusion_passive()
               
-        rev_first = np.column_stack((myDiffNum.passive_reverse_samples_x[0],
-                                    myDiffNum.passive_reverse_samples_y[0]))
+        rev_first = myDiffNum.passive_reverse_samples[0]
         
-        rev_last = np.column_stack((myDiffNum.passive_reverse_samples_x[-1],
-                                   myDiffNum.passive_reverse_samples_y[-1]))
+        rev_last = myDiffNum.passive_reverse_samples[-1]
         
         hist_rev_first, xb_rev_first, yb_rev_first = np.histogram2d(rev_first[:,0], rev_first[:,1], 
                                                         density=True,

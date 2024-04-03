@@ -27,32 +27,21 @@ class DiffusionNumeric2D(Diffusion2D):
         self.passive_models = None
         self.passive_loss_history = None
         
-    def compute_loss_passive(self, forward_samples, t, score_model_x, score_model_y):
+    def compute_loss_passive(self, forward_samples, t, score_model):
+        sample_t = forward_samples[t].reshape(self.sample_dim, 2).type(torch.DoubleTensor)
         
-        sample_x_t = forward_samples[t][:,0].reshape(self.sample_dim, 1).type(torch.DoubleTensor)
-        
-        sample_y_t = forward_samples[t][:,1].reshape(self.sample_dim, 1).type(torch.DoubleTensor)
-        
-        l_x = -(sample_x_t - forward_samples[0][:,0]*np.exp(-t*self.dt)) / \
-            (self.passive_noise.temperature * (1-np.exp(-2*t*self.dt)))
+        l = -(sample_t - forward_samples[0]*np.exp(-t*self.dt)) / \
+            (self.passive_noise.temperature * (1 - np.exp(-2*t*self.dt)))
             
-        l_y = -(sample_y_t - forward_samples[0][:,1]*np.exp(-t*self.dt)) / \
-            (self.passive_noise.temperature * (1-np.exp(-2*t*self.dt)))
-
-        sample_t = torch.cat((sample_x_t, sample_y_t), dim=1)
-
-        scr_x = score_model_x(sample_t)
-        scr_y = score_model_y(sample_t)
+        scr = score_model(sample_t)
         
-        loss_x = torch.mean((scr_x - l_x)**2)
-        loss_y = torch.mean((scr_y - l_y)**2)
+        loss = torch.mean((scr - l)**2)
         
-        return loss_x, loss_y, torch.mean(l_x**2), torch.mean(scr_x**2)
-    
+        return loss, torch.mean(l**2), torch.mean(scr**2)
+        
     def train_diffusion_passive(self, nrnodes=4, iterations=500):
         loss_history = []
-        all_models_x = []
-        all_models_y = []
+        all_models = []
         
         forward_samples = self.forward_diffusion_passive()
         
@@ -75,49 +64,32 @@ class DiffusionNumeric2D(Diffusion2D):
         time_step_list = []
         
         for e in bar:
-            score_model_x = torch.nn.Sequential(
+            score_model = torch.nn.Sequential(
                 torch.nn.Linear(2, nrnodes), torch.nn.Tanh(),
                 torch.nn.Linear(nrnodes, nrnodes), torch.nn.Tanh(),
                 torch.nn.Linear(nrnodes, nrnodes), torch.nn.Tanh(),
-                torch.nn.Linear(nrnodes, 1)
+                torch.nn.Linear(nrnodes, 2)
             ).double()
             
-            score_model_y = torch.nn.Sequential(
-                torch.nn.Linear(2, nrnodes), torch.nn.Tanh(),
-                torch.nn.Linear(nrnodes, nrnodes), torch.nn.Tanh(),
-                torch.nn.Linear(nrnodes, nrnodes), torch.nn.Tanh(),
-                torch.nn.Linear(nrnodes, 1)
-            ).double()
+            optim = torch.optim.AdamW(itertools.chain(
+                    score_model.parameters()), lr=1e-2, weight_decay=1e-8,)
             
-            optim_x = torch.optim.AdamW(itertools.chain(
-                    score_model_x.parameters()), lr=1e-2, weight_decay=1e-8,)
-
-            optim_y = torch.optim.AdamW(itertools.chain(
-                    score_model_y.parameters()), lr=1e-2, weight_decay=1e-8,)
-
-            loss = 100
-
             for _ in range(iterations):
-                optim_x.zero_grad()
-                optim_y.zero_grad()
+                optim.zero_grad()
 
-                loss_x, loss_y, l_x, scr_x = self.compute_loss_passive(forward_samples,
+                loss, l, scr = self.compute_loss_passive(forward_samples,
                                                          t_idx,
-                                                         score_model_x, 
-                                                         score_model_y)
+                                                         score_model)
 
-                loss_x.backward()
-                loss_y.backward()
+                loss.backward()
                 
-                optim_x.step()
-                optim_y.step()
+                optim.step()
 
-            bar.set_description(f'Time:{t_idx} Loss: {loss_x.item():.4f}')
+            bar.set_description(f'Time:{t_idx} Loss: {loss.item():.4f}')
 
-            all_models_x.append(copy.deepcopy(score_model_x))
-            all_models_y.append(copy.deepcopy(score_model_y))
+            all_models.append(copy.deepcopy(score_model))
 
-            loss_history.append(loss_x.item())
+            loss_history.append(loss.item())
 
             time_now = t_idx * self.dt
 
@@ -126,27 +98,19 @@ class DiffusionNumeric2D(Diffusion2D):
             t_idx += 1
 
         self.passive_forward_time_arr = np.array(time_step_list)
-        self.passive_models_x = all_models_x
-        self.passive_models_y = all_models_y
+        self.passive_models = all_models
         self.passive_loss_history = np.array(loss_history)
 
-        return all_models_x
+        return all_models
     
-    def sample_from_diffusion_passive(self, all_models_x=None, all_models_y=None, time=None):
-        if all_models_x is None:
-            all_models_x = self.passive_models_x
+    def sample_from_diffusion_passive(self, all_models=None, time=None):
+        if all_models is None:
+            all_models = self.passive_models
             
-        if all_models_y is None:
-            all_models_y = self.passive_models_y
+        sample_t = self.passive_noise.temperature * \
+            torch.randn(self.sample_dim, 2).type(torch.DoubleTensor)
             
-        sample_x_t = self.passive_noise.temperature * \
-            torch.randn(self.sample_dim, 1).type(torch.DoubleTensor)
-            
-        sample_y_t = self.passive_noise.temperature * \
-            torch.randn(self.sample_dim, 1).type(torch.DoubleTensor)
-            
-        samples_x = [sample_x_t.detach()]
-        samples_y = [sample_y_t.detach()]
+        samples = [sample_t.detach()]
         
         time_step_list = []
         
@@ -169,29 +133,20 @@ class DiffusionNumeric2D(Diffusion2D):
             time_now = t*self.dt
 
             time_step_list.append(time_now)
-            
-            sample_t = torch.cat((sample_x_t, sample_y_t), dim=1)
+    
 
-            Fx = all_models_x[t](sample_t)
-            Fy = all_models_y[t](sample_t)
+            F = all_models[t](sample_t)
             # If using the total score function
 
-            sample_x_t = sample_x_t + sample_x_t*self.dt + \
-                2*self.passive_noise.temperature*Fx*self.dt + \
+            sample_t = sample_t + sample_t*self.dt + \
+                2*self.passive_noise.temperature*F*self.dt + \
                 np.sqrt(2*self.passive_noise.temperature*self.dt) * \
-                torch.randn(self.sample_dim, 1)
-                
-            sample_y_t = sample_y_t + sample_y_t*self.dt + \
-                2*self.passive_noise.temperature*Fy*self.dt + \
-                np.sqrt(2*self.passive_noise.temperature*self.dt) * \
-                torch.randn(self.sample_dim, 1)
+                torch.randn(self.sample_dim, 2)
 
-            samples_x.append(sample_x_t.detach())
-            samples_y.append(sample_y_t.detach())
+            samples.append(sample_t.detach())
 
         self.passive_reverse_time_arr = np.array(time_step_list)
 
-        self.passive_reverse_samples_x = samples_x
-        self.passive_reverse_samples_y = samples_y
+        self.passive_reverse_samples = samples
 
-        return sample_x_t.detach(), samples_x
+        return sample_t.detach(), samples
