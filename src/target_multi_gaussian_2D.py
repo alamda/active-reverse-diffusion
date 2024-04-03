@@ -38,6 +38,7 @@ class TargetMultiGaussian2D(TargetAbstract):
                           dim=None,
                           num_points_x=50,
                           num_points_y=50,
+                          num_bins=50,
                           xmin=None, xmax=None,
                           ymin=None, ymax=None):
 
@@ -120,8 +121,6 @@ class TargetMultiGaussian2D(TargetAbstract):
         self.sample = np.array([list(s) for s in sample])
         
         # https://numpy.org/doc/stable/reference/generated/numpy.histogram2d.html
-
-        num_bins = 50
 
         hist, x_bins, y_bins = np.histogram2d(
             x_samples, y_samples, bins=num_bins, density=True)
