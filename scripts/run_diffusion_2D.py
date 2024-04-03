@@ -35,7 +35,7 @@ if __name__ == "__main__":
     ymin = -1
     ymax = 1
 
-    num_diffusion_steps = 2
+    num_diffusion_steps = 10
     dt = 0.005
     
     num_hist_bins = 10
@@ -111,12 +111,21 @@ if __name__ == "__main__":
         
         myDiffNum.target.gen_target_sample(num_bins=num_hist_bins)
         # myDiffNum.num_diffusion_steps=1
-        myDiffNum.train_diffusion_passive(iterations=1000)
-        myDiffNum.sample_from_diffusion_passive()
-        myDiffNum.calculate_passive_diff_list()
-        
-        with open(f"{ofile_base}.pkl", 'wb') as f:
-            pickle.dump(myDiffNum, f)
+
+        if os.path.isfile(f"{ofile_base}.pkl"):
+            with open(f"{ofile_base}.pkl", 'rb') as f:
+                myDiffNum = pickle.load(f)
+        else:
+            myDiffNum.train_diffusion_passive(iterations=1000)
+            myDiffNum.sample_from_diffusion_passive()
+            myDiffNum.calculate_passive_diff_list()
+            
+            myDiffNum.train_diffusion_active(iterations=1000)
+            myDiffNum.sample_from_diffusion_active()
+            myDiffNum.calculate_active_diff_list()
+            
+            with open(f"{ofile_base}.pkl", 'wb') as f:
+                pickle.dump(myDiffNum, f)
               
         rev_pass_first = myDiffNum.passive_reverse_samples[0]
         
@@ -134,6 +143,22 @@ if __name__ == "__main__":
                                                      bins=num_hist_bins,
                                                      range=[[xmin, xmax], [ymin, ymax]])
         
+        
+        rev_act_first = myDiffNum.active_reverse_samples_x[0]
+        rev_act_last = myDiffNum.active_reverse_samples_x[-1]
+        
+        hist_rev_act_first, xb_rev_act_first, yb_rev_act_first = np.histogram2d(rev_act_first[:,0], 
+                                                                                   rev_act_first[:,1], 
+                                                        density=True,
+                                                        bins=num_hist_bins,
+                                                        range=[[xmin, xmax], [ymin, ymax]])
+        
+        hist_rev_act_last, xb_rev_act_last, yb_rev_act_last = np.histogram2d(rev_act_last[:,0], 
+                                                                                rev_act_last[:,1], 
+                                                     density=True,
+                                                     bins=num_hist_bins,
+                                                     range=[[xmin, xmax], [ymin, ymax]])
+        
         target = myDiffNum.target.sample
         
         hist_target, xb_target, yb_target = np.histogram2d(target[:,0], target[:,1], 
@@ -141,9 +166,11 @@ if __name__ == "__main__":
                                                            bins=num_hist_bins,
                                                            range=[[xmin, xmax], [ymin, ymax]])
         
+        ###
+        
         fig, axs = plt.subplots(3, 5)
         
-        fig.set_size_inches(5,7)
+        fig.set_size_inches(10,10)
         
         axs[0,0].imshow(hist_forw_pass_first) 
         axs[0,0].set_title('pass_forw[0]')
@@ -168,8 +195,12 @@ if __name__ == "__main__":
         axs[1,1].set_title('pass_rev[-1]')
         
         axs[1,2].axis('off')
-        axs[1,3].axis('off')
-        axs[1,4].axis('off')
+        
+        axs[1,3].imshow(hist_rev_act_first)
+        axs[1,3].set_title('act_rev[0]')
+                
+        axs[1,4].imshow(hist_rev_act_last)
+        axs[1,4].set_title('act_rev[-1]')
         
         ###
         
@@ -187,7 +218,7 @@ if __name__ == "__main__":
         
         plt.close(fig)
 
-    if False:
+    if True:
         with open("data.pkl", 'rb') as f:
             myDiffNum = pickle.load(f)
         
@@ -196,9 +227,15 @@ if __name__ == "__main__":
         t_list_passive = np.arange(
             0, len(myDiffNum.passive_diff_list))*myDiffNum.dt
         
+        t_list_active = np.arange(0, len(myDiffNum.active_diff_list))*myDiffNum.dt
+        
         ax.scatter(t_list_passive, 
                    np.log(myDiffNum.passive_diff_list),
                    label="passive")
+        
+        ax.scatter(t_list_active, 
+                   np.log(myDiffNum.active_diff_list),
+                   label="active")
         
         ax.legend()
         
