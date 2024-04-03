@@ -28,6 +28,9 @@ class DiffusionNumeric2D(Diffusion2D):
         self.passive_loss_history = None
         
     def compute_loss_passive(self, forward_samples, t, score_model):
+        
+        forward_samples = [torch.from_numpy(f) for f in forward_samples]
+        
         sample_t = forward_samples[t].reshape(self.sample_dim, 2).type(torch.DoubleTensor)
         
         l = -(sample_t - forward_samples[0]*np.exp(-t*self.dt)) / \
@@ -48,13 +51,13 @@ class DiffusionNumeric2D(Diffusion2D):
         if len(forward_samples[0].shape) == 1:
             num_points = forward_samples[0].shape[0]
 
-            forward_samples = [torch.from_numpy(f).reshape((self.sample_dim, 1))
+            forward_samples = [f.reshape((self.sample_dim, 1))
                                for f in forward_samples]
         else:
             num_points = forward_samples[0].shape[0]
             num_dim = forward_samples[0].shape[1]
             
-            forward_samples = [torch.from_numpy(f).reshape((self.sample_dim, num_dim))
+            forward_samples = [f.reshape((self.sample_dim, num_dim))
                                for f in forward_samples]
         
         bar = tqdm(range(1, self.num_diffusion_steps))
