@@ -90,3 +90,16 @@ class TargetMultiGaussian2D(TargetAbstract):
         self.x_arr = x_arr
         self.y_arr = y_arr
         self.prob_arr = z_arr
+        
+        prob_arr_flat = z_arr.flatten()
+        idx_list = [idx for idx, _ in np.ndenumerate(x_mesh)]
+        idx_arr = np.array(idx_list)
+
+        idx_samples = np.random.choice(len(idx_arr), self.dim, p=prob_arr_flat)
+
+        x_samples = [x_arr[idx_arr[idx][0]] for idx in idx_samples]
+        y_samples = [y_arr[idx_arr[idx][1]] for idx in idx_samples]
+
+        sample = list(zip(x_samples, y_samples))
+        
+        self.sample = np.array([list(s) for s in sample])
