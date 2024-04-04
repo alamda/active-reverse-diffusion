@@ -1,130 +1,136 @@
-from .context import data_proc, diffusion_numeric, noise, target_multi_gaussian
+from .context import data_proc
 
 from data_proc import DataProc
-from diffusion_numeric import DiffusionNumeric
-from noise import NoiseActive, NoisePassive
-from target_multi_gaussian import TargetMultiGaussian
 
-import numpy as np
 import math
-
+import numpy as np
+import multiprocess
 from multiprocess import Pool
 
-
 class DataProcTest_Factory:
-    sample_dim = 100
-    ofile_base = "abc"
+    var_dict = dict(xmin=float, 
+                    xmax=float,
+                    ymin=float, 
+                    ymax=float,
+                    num_hist_bins=(list, tuple),
+                    num_hist_bins_x=int,
+                    num_hist_bins_y=int)
+    
+    ## Params for __init__()
+    # All params explicitly specified
+    init_all_params = dict(xmin=-5, 
+                  xmax=-1, 
+                  ymin=-2, 
+                  ymax=0,
+                  num_hist_bins=(4,4),
+                  num_hist_bins_x=4,
+                  num_hist_bins_y=6)
+    
+    # Only params with default values specified
+    init_preset_params = dict(xmin=-5, 
+                         xmax=-1, 
+                         num_hist_bins=(4,4))
+    
+    # Only non-preset params
+    init_non_preset_params = dict(ymin=1,
+                             ymax=10,
+                             num_hist_bins=(4,4))
+    
+    # No params
+    init_no_params = dict()
+
+    init_param_dict = dict(all_params=init_all_params,
+                           preset_params=init_preset_params,
+                           non_preset_params=init_non_preset_params,
+                           no_params=init_no_params)
+    
+    ## Dummy diffusion data    
+    dummy_sample_shape = (1000, 2)
+    dummy_target_sample = np.random.rand(*dummy_sample_shape)
+    
+    dummy_diffusion_sample_list = []
+    dummy_num_diffusion_steps = 10
+    
+    for _ in range(dummy_num_diffusion_steps):
+        dummy_diffusion_sample_list.append(np.random.rand(*dummy_sample_shape))
+    
+    ## Params for calc_diff_vs_t
     num_diffusion_steps = 10
-    dt = 0.01
-
-    passive_noise_T = 1.0
-
-    active_noise_Tp = 0.5
-    active_noise_Ta = 0.5
-    tau = 0.1
-
-    mu_list = [-1, 1]
-    sigma_list = [0.5, 0.5]
-    pi_list = [1.0, 1.0]
-
-    xmin = -1
-    xmax = 1
-    num_hist_bins = 10
-
-    myPassiveNoise = NoisePassive(T=passive_noise_T,
-                                  dim=sample_dim)
-
-    myActiveNoise = NoiseActive(Tp=active_noise_Tp,
-                                Ta=active_noise_Ta,
-                                tau=tau,
-                                dim=sample_dim)
-
-    myTarget = TargetMultiGaussian(mu_list=mu_list,
-                                   sigma_list=sigma_list,
-                                   pi_list=pi_list,
-                                   dim=sample_dim,
-                                   xmin=xmin,
-                                   xmax=xmax)
-
-    myDiffNum = DiffusionNumeric(ofile_base=ofile_base,
-                                 passive_noise=myPassiveNoise,
-                                 active_noise=myActiveNoise,
-                                 target=myTarget,
-                                 num_diffusion_steps=num_diffusion_steps,
-                                 dt=dt,
-                                 sample_dim=sample_dim)
-
-    def create_test_object(self):
-        myDataProc = DataProc(xmin=self.xmin,
-                              xmax=self.xmax,
-                              num_hist_bins=self.num_hist_bins)
-
-        return myDataProc
-
+    
+    num_procs = multiprocess.cpu_count() - 2
+    
+    no_multiproc = dict()
+    
+    pool = Pool(processes=num_procs)
+     
+    multiproc = dict(multiproc=True,
+                     pool=pool)
+    
+    calc_param_dict = dict(no_multiproc=no_multiproc,
+                           multiproc=multiproc)
 
 def test_init():
-    myFactory = DataProcTest_Factory()
-    myDataProc = myFactory.create_test_object()
-
-    assert myDataProc.xmin == myFactory.xmin
-    assert myDataProc.xmax == myFactory.xmax
-    assert myDataProc.num_hist_bins == myFactory.num_hist_bins
-
-
+    
+    dp_factory = DataProcTest_Factory()
+    
+    for _, params in dp_factory.init_param_dict.items():
+        dp = DataProc(**params)
+    
+        for val_name, val_type in dp_factory.var_dict.items():
+            val = getattr(dp, val_name)
+            
+            assert isinstance(val, val_type)
+            
+            if (type(val) == float) or (type(val) == int):
+                assert math.isfinite(val)
+        
+        # Check that histogram dimension tuple is ok
+        for num in dp.num_hist_bins:
+            assert isinstance(num, int)
+            assert math.isfinite(num)
+               
 def test_calc_KL_divergence():
-    myFactory = DataProcTest_Factory()
-    myDataProc = myFactory.create_test_object()
-
-    for _ in range(10):
-        passive_models = myFactory.myDiffNum.train_diffusion_passive(
-            iterations=10)
-
-        x, reverse_diffusion_passive_samples = myFactory.myDiffNum.sample_from_diffusion_passive(
-            passive_models)
-
-        diff = myDataProc.calc_KL_divergence(reverse_diffusion_passive_samples[-1],
-                                             myFactory.myDiffNum.target.sample)
+    
+    dp_factory = DataProcTest_Factory()
+    
+    sample_shape_list = [(1000,),
+                         (1000,1),
+                         (1000,2)]
+    
+    dp = DataProc(xmin=0.1, xmax=0.9, num_hist_bins=5)
+    
+    for shape in sample_shape_list:
+        target_sample = np.random.rand(*shape)
+        test_sample = np.random.rand(*shape)
+        
+        diff = dp.calc_KL_divergence(target_sample=target_sample,
+                                     test_sample=test_sample)
 
         assert diff is not None
+        assert isinstance(diff, float)
         assert math.isfinite(diff)
-
-
+        
 def test_calc_diff_vs_t():
-    myFactory = DataProcTest_Factory()
-    myDataProc = myFactory.create_test_object()
-
-    for _ in range(10):
-        passive_models = myFactory.myDiffNum.train_diffusion_passive(
-            iterations=10)
-
-        x, reverse_diffusion_passive_samples = myFactory.myDiffNum.sample_from_diffusion_passive(
-            passive_models)
-
-        difflist = myDataProc.calc_diff_vs_t(
-            myFactory.myDiffNum.target.sample, reverse_diffusion_passive_samples)
-
-        assert np.isfinite(np.array(difflist).all())
-
-        assert len(difflist) == len(reverse_diffusion_passive_samples) - 1
-        assert len(difflist) == myFactory.num_diffusion_steps - 2
-
-
+    
+    dp_factory = DataProcTest_Factory()
+    
+    dp = DataProc(xmin=0.1, xmax=0.9, num_hist_bins=5)
+  
+    for _, params in dp_factory.calc_param_dict.items():
+        diff_list = dp.calc_diff_vs_t(target_sample=dp_factory.dummy_target_sample, 
+                                    diffusion_sample_list=dp_factory.dummy_diffusion_sample_list)
+        
+        assert len(diff_list) == dp_factory.dummy_num_diffusion_steps - 1 #????
+        assert math.isfinite(np.array(diff_list).all())
+        
 def test_calc_diff_vs_t_multiproc():
-    myFactory = DataProcTest_Factory()
-    myDataProc = myFactory.create_test_object()
-
-    for _ in range(10):
-        passive_models = myFactory.myDiffNum.train_diffusion_passive(
-            iterations=10)
-
-        x, reverse_diffusion_passive_samples = myFactory.myDiffNum.sample_from_diffusion_passive(
-            passive_models)
-
-        with Pool(processes=4) as pool:
-            difflist = myDataProc.calc_diff_vs_t_multiproc(myFactory.myDiffNum.target.sample,
-                                                           reverse_diffusion_passive_samples,
-                                                           pool=pool)
-        assert np.isfinite(np.array(difflist).all())
-
-        assert len(difflist) == len(reverse_diffusion_passive_samples) - 1
-        assert len(difflist) == myFactory.num_diffusion_steps - 2
+    dp_factory = DataProcTest_Factory()
+    
+    dp = DataProc(xmin=0.1, xmax=0.9, num_hist_bins=5)
+    
+    diff_list = dp.calc_diff_vs_t_multiproc(target_sample=dp_factory.dummy_target_sample,
+                                            diffusion_sample_list=dp_factory.dummy_diffusion_sample_list,
+                                            pool=dp_factory.pool)
+    
+    assert len(diff_list) == dp_factory.dummy_num_diffusion_steps - 1
+    assert math.isfinite(np.array(diff_list).all())
