@@ -17,7 +17,7 @@ from diffusion_numeric_2D import DiffusionNumeric2D
 if __name__ == "__main__":
     ofile_base = "data"
 
-    sample_dim = 10000
+    sample_dim = 100000
 
     passive_noise_T = 1.0
 
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     ymin = -1
     ymax = 1
 
-    num_diffusion_steps = 100
+    num_diffusion_steps = 500
     dt = 0.005
     
     num_hist_bins = 10
@@ -116,11 +116,11 @@ if __name__ == "__main__":
             with open(f"{ofile_base}.pkl", 'rb') as f:
                 myDiffNum = pickle.load(f)
         else:
-            myDiffNum.train_diffusion_passive(iterations=1000)
+            myDiffNum.train_diffusion_passive(iterations=2000)
             myDiffNum.sample_from_diffusion_passive()
             myDiffNum.calculate_passive_diff_list()
             
-            myDiffNum.train_diffusion_active(iterations=2000)
+            myDiffNum.train_diffusion_active(iterations=5000)
             myDiffNum.sample_from_diffusion_active()
             myDiffNum.calculate_active_diff_list()
             
