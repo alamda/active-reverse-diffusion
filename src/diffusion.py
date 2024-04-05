@@ -9,8 +9,6 @@ import torch
 
 class Diffusion(AbstractBaseClass):
     def __init__(self, ofile_base="", 
-                 sample_size=None, 
-                 sample_dim=None,
                  passive_noise=None, 
                  active_noise=None, 
                  target=None,
@@ -79,7 +77,6 @@ class Diffusion(AbstractBaseClass):
     def sample_from_diffusion_passive(self):
         """Reverse diffusion process with passive noise"""
 
-    # Not merged
     def forward_diffusion_active(self):
         eta = torch.normal(torch.zeros_like(self.target.sample),
                            np.sqrt(self.active_noise.temperature.active /
@@ -88,10 +85,10 @@ class Diffusion(AbstractBaseClass):
                            )
         samples = [self.target.sample]
         eta_samples = [eta]
-        x_t = self.target.sample
+        sample_t = self.target.sample
 
         for t_idx in range(self.num_diffusion_steps):
-            x_t = x_t - self.dt*x_t + self.dt*eta + \
+            samole_t = sample_t - self.dt*sample_t + self.dt*eta + \
                 np.sqrt(2*self.active_noise.temperature.passive*self.dt) * \
                 torch.normal(torch.zeros_like(self.target.sample),
                              torch.ones_like(self.target.sample))
@@ -101,13 +98,13 @@ class Diffusion(AbstractBaseClass):
                 np.sqrt(2*self.active_noise.temperature.active*self.dt) * \
                 torch.normal(torch.zeros_like(eta), torch.ones_like(eta))
 
-            samples.append(x_t)
+            samples.append(sample_t)
             eta_samples.append(eta)
 
-        samples = [s.reshape((self.sample_dim, 1)).type(torch.DoubleTensor)
+        samples = [s.reshape((self.sample_size, self.sample_dim)).type(torch.DoubleTensor)
                    for s in samples]
 
-        eta_samples = [s.reshape((self.sample_dim, 1)).type(torch.DoubleTensor)
+        eta_samples = [s.reshape((self.sample_size, self.sample_dim)).type(torch.DoubleTensor)
                        for s in eta_samples]
 
         self.active_forward_samples_x = samples

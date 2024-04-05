@@ -77,9 +77,7 @@ class DiffusionTest_Factory:
                                num_diffusion_steps=num_diffusion_steps,
                                dt=dt,
                                data_proc=data_proc,
-                               diffusion_type=diffusion_type)
-    
-    
+                               diffusion_type=diffusion_type) 
     
     init_param_dict = dict(all_params_1D=all_params_explicit_1D,
                            all_params_2D=all_params_explicit_2D,
@@ -113,3 +111,17 @@ def test_forward_diffusion_passive():
         
         for sample in passive_forward_samples: 
             assert bool(torch.isfinite(sample).all())
+            
+def test_forward_diffusion_active():
+    dn_factory = DiffusionTest_Factory()
+    
+    for _, params in dn_factory.init_param_dict.items():
+        dn = Diffusion(**params)
+        
+        samples_list = dn.forward_diffusion_active()
+        
+        for samples in samples_list:
+            assert len(samples) == dn_factory.num_diffusion_steps + 1
+            
+            for sample in samples:
+                assert bool(torch.isfinite(sample).all())
