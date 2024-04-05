@@ -12,7 +12,11 @@ Diffusion.__abstractmethods__=set()
 
 class DummyTarget:
     shape = (1000, 2)
-    sample = torch.randn(*shape).type(torch.DoubleTensor)
+    
+    def gen_sample(self, shape=None):
+        self.shape = shape if shape is not None else self.shape
+        
+        self.sample = torch.randn(*self.shape).type(torch.DoubleTensor)  
 
 class DiffusionTest_Factory:    
     ofile_base = "test"
@@ -22,8 +26,11 @@ class DiffusionTest_Factory:
     
     passive_noise = NoisePassive(T=1.0, dim=sample_size)
     active_noise = NoiseActive(Tp=0, Ta=1.0, tau=0.1, dim=sample_size)
-    dummy_target = DummyTarget()
-    
+    dummy_target_1D = DummyTarget()
+    dummy_target_1D.gen_sample(shape=(1000,1))
+    dummy_target_2D = DummyTarget()
+    dummy_target_2D.gen_sample(shape=(1000,2))
+
     num_diffusion_steps = 10
     dt = 0.5
     k = 2
@@ -45,27 +52,42 @@ class DiffusionTest_Factory:
                     data_proc=DataProc,
                     diffusion_type=str)
     
-    all_params_explicit = dict(ofile_base=ofile_base,
-                               sample_size=sample_size,
-                               sample_dim=sample_dim,
-                               passive_noise=passive_noise,
-                               active_noise=active_noise,
-                               target=dummy_target,
-                               num_diffusion_steps=num_diffusion_steps,
-                               dt=dt,
-                               k=k,
-                               data_proc=data_proc,
-                               diffusion_type=diffusion_type)
+    all_params_explicit_1D = dict(ofile_base=ofile_base,
+                                  sample_size=sample_size,
+                                  sample_dim=sample_dim,
+                                  passive_noise=passive_noise,
+                                  active_noise=active_noise,
+                                  target=dummy_target_1D,
+                                  num_diffusion_steps=num_diffusion_steps,
+                                  dt=dt,
+                                  k=k,
+                                  data_proc=data_proc,
+                                  diffusion_type=diffusion_type)
+    
+    all_params_explicit_2D = dict(ofile_base=ofile_base,
+                                  sample_size=sample_size,
+                                  sample_dim=sample_dim,
+                                  passive_noise=passive_noise,
+                                  active_noise=active_noise,
+                                  target=dummy_target_2D,                                  
+                                  num_diffusion_steps=num_diffusion_steps,
+                                  dt=dt,
+                                  k=k,
+                                  data_proc=data_proc,
+                                  diffusion_type=diffusion_type)
     
     req_params_explicit = dict(passive_noise=passive_noise,
                                active_noise=active_noise,
-                               target=dummy_target,
+                               target=dummy_target_1D,
                                num_diffusion_steps=num_diffusion_steps,
                                dt=dt,
                                data_proc=data_proc,
                                diffusion_type=diffusion_type)
     
-    init_param_dict = dict(all_params=all_params_explicit,
+    
+    
+    init_param_dict = dict(all_params_1D=all_params_explicit_1D,
+                           all_params_2D=all_params_explicit_2D,
                            req_params=req_params_explicit)
     
 
@@ -87,12 +109,12 @@ def test_init():
 def test_forward_diffusion_passive():
     dn_factory = DiffusionTest_Factory()
     
-    dn = Diffusion(**dn_factory.all_params_explicit)
-    
-    passive_forward_samples = dn.forward_diffusion_passive()
-    
-    assert len(passive_forward_samples) == dn_factory.num_diffusion_steps + 1
-    
-    for sample in passive_forward_samples: 
-        assert bool(torch.isfinite(sample).all())
-    
+    for _, params in dn_factory.init_param_dict.items():
+        dn = Diffusion(**params)
+        
+        passive_forward_samples = dn.forward_diffusion_passive()
+        
+        assert len(passive_forward_samples) == dn_factory.num_diffusion_steps + 1
+        
+        for sample in passive_forward_samples: 
+            assert bool(torch.isfinite(sample).all())
