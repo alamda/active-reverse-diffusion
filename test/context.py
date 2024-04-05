@@ -4,6 +4,8 @@ sys.path.insert(0, os.path.abspath(
     os.path.join(os.path.dirname(__file__), '../src/')))
 
 import data_proc
+import diffusion
+import noise
 # import data_proc_1D
 # import diffusion_numeric_1D
 # import diffusion_analytic_1D
