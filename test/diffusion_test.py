@@ -92,5 +92,7 @@ def test_forward_diffusion_passive():
     passive_forward_samples = dn.forward_diffusion_passive()
     
     assert len(passive_forward_samples) == dn_factory.num_diffusion_steps + 1
-    # more tests? 
+    
+    for sample in passive_forward_samples: 
+        assert bool(torch.isfinite(sample).all())
     
