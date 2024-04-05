@@ -115,8 +115,8 @@ class DataProc:
         
         return diff
         
-    def calc_diff_vs_t(self, target_sample,
-                       diffusion_sample_list,
+    def calc_diff_vs_t(self, target_sample=None,
+                       diffusion_sample_list=None,
                        multiproc=False,
                        pool=None):
         t_list = []
