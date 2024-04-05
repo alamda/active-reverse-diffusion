@@ -64,8 +64,9 @@ class Diffusion(AbstractBaseClass):
         
         for t_idx in range(self.num_diffusion_steps):
             sample_t = sample_t - self.dt*sample_t + \
-                    np.sqrt(2*self.passive_noise.temperature*self.dt) * \
-                    np.random.randn(self.sample_size, self.sample_dim)
+                np.sqrt(2*self.passive_noise.temperature*self.dt) * \
+                torch.normal(torch.zeros_like(self.target.sample),
+                             torch.ones_like(self.target.sample))
 
             forward_diffusion_sample_list.append(sample_t)
        
@@ -88,7 +89,7 @@ class Diffusion(AbstractBaseClass):
         sample_t = self.target.sample
 
         for t_idx in range(self.num_diffusion_steps):
-            samole_t = sample_t - self.dt*sample_t + self.dt*eta + \
+            sample_t = sample_t - self.dt*sample_t + self.dt*eta + \
                 np.sqrt(2*self.active_noise.temperature.passive*self.dt) * \
                 torch.normal(torch.zeros_like(self.target.sample),
                              torch.ones_like(self.target.sample))
