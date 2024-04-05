@@ -22,7 +22,6 @@ class DiffusionTest_Factory:
     ofile_base = "test"
     
     sample_size = 1000
-    sample_dim = 2
     
     passive_noise = NoisePassive(T=1.0, dim=sample_size)
     active_noise = NoiseActive(Tp=0, Ta=1.0, tau=0.1, dim=sample_size)
@@ -53,8 +52,6 @@ class DiffusionTest_Factory:
                     diffusion_type=str)
     
     all_params_explicit_1D = dict(ofile_base=ofile_base,
-                                  sample_size=sample_size,
-                                  sample_dim=sample_dim,
                                   passive_noise=passive_noise,
                                   active_noise=active_noise,
                                   target=dummy_target_1D,
@@ -65,8 +62,6 @@ class DiffusionTest_Factory:
                                   diffusion_type=diffusion_type)
     
     all_params_explicit_2D = dict(ofile_base=ofile_base,
-                                  sample_size=sample_size,
-                                  sample_dim=sample_dim,
                                   passive_noise=passive_noise,
                                   active_noise=active_noise,
                                   target=dummy_target_2D,                                  
