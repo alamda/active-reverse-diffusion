@@ -11,10 +11,10 @@ import torch
 Diffusion.__abstractmethods__=set()
 
 class DummyTarget:
-    shape = (1000, 2)
+    shape = None
     
     def gen_sample(self, shape=None):
-        self.shape = shape if shape is not None else self.shape
+        self.shape = shape
         
         self.sample = torch.randn(*self.shape).type(torch.DoubleTensor)  
         
@@ -28,9 +28,9 @@ class DiffusionTest_Factory:
     passive_noise = NoisePassive(T=1.0, dim=sample_size)
     active_noise = NoiseActive(Tp=0, Ta=1.0, tau=0.1, dim=sample_size)
     dummy_target_1D = DummyTarget()
-    dummy_target_1D.gen_sample(shape=(1000,1))
+    dummy_target_1D.gen_sample(shape=(sample_size,1))
     dummy_target_2D = DummyTarget()
-    dummy_target_2D.gen_sample(shape=(1000,2))
+    dummy_target_2D.gen_sample(shape=(sample_size,2))
 
     num_diffusion_steps = 10
     dt = 0.5
