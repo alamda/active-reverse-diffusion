@@ -17,6 +17,8 @@ class DummyTarget:
         self.shape = shape if shape is not None else self.shape
         
         self.sample = torch.randn(*self.shape).type(torch.DoubleTensor)  
+        
+        return self.sample
 
 class DiffusionTest_Factory:    
     ofile_base = "test"
@@ -37,6 +39,18 @@ class DiffusionTest_Factory:
     data_proc = DataProc()
     
     diffusion_type = 'numeric'
+    
+    # Dummy reverse samples because reverse diffusion not impemented in this abstract class
+    passive_reverse_samples_1D = []
+    passive_reverse_samples_2D = []
+    active_reverse_samples_1D = []
+    active_reverse_samples_2D = []
+    
+    for _ in range(num_diffusion_steps):
+        passive_reverse_samples_1D.append(dummy_target_1D.gen_sample())
+        passive_reverse_samples_2D.append(dummy_target_2D.gen_sample())
+        active_reverse_samples_1D.append(dummy_target_1D.gen_sample())
+        active_reverse_samples_2D.append(dummy_target_2D.gen_sample())
 
     ## Testing various sets of parameters for init
     var_dict = dict(ofile_base=str,
@@ -125,3 +139,30 @@ def test_forward_diffusion_active():
             
             for sample in samples:
                 assert bool(torch.isfinite(sample).all())
+                
+def test_calculate_diff_list():
+    dn_factory = DiffusionTest_Factory()
+    
+    passive_diff_strings = ['passive', 'Passive', 'PASSIVE']
+    active_diff_strings = ['active', 'Active', 'ACTIVE']
+    
+    for _, params in dn_factory.init_param_dict.items():
+        dn = Diffusion(**params)
+        
+        if dn.sample_dim == 1:
+            dn.passive_reverse_samples = dn_factory.passive_reverse_samples_1D
+            dn.active_reverse_samples = dn_factory.active_reverse_samples_1D
+        elif dn.sample_dim == 2: 
+            dn.passive_reverse_samples = dn_factory.passive_reverse_samples_2D
+            dn.active_reverse_samples = dn_factory.active_reverse_samples_2D
+
+        for type_str in passive_diff_strings:
+            dn.calculate_diff_list(diffusion_type=type_str)
+            
+            assert dn.passive_diff_list is not None
+            
+        for type_str in active_diff_strings:
+            dn.calculate_diff_list(diffusion_type=type_str)
+            
+            assert dn.active_diff_list is not None
+        

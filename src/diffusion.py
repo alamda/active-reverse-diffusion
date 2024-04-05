@@ -116,36 +116,47 @@ class Diffusion(AbstractBaseClass):
     def sample_from_diffusion_active(self):
         """Reverse diffusion process with active and passive noise"""
 
-    # Not merged
+    def calculate_diff_list(self, diffusion_type=None, multiproc=True):
+        sample_list_attr_name = None
+        diff_list_attr_name = None
+        
+        if diffusion_type in ('passive', 'Passive', 'PASSIVE'):
+            sample_list_attr_name = 'passive_reverse_samples'
+            diff_list_attr_name = 'passive_diff_list'
+        elif diffusion_type in ('active', 'Active', 'ACTIVE'):
+            sample_list_attr_name = 'active_reverse_samples'
+            diff_list_attr_name = 'active_diff_list'
+        
+        if (sample_list_attr_name is not None) and (diff_list_attr_name is not None):
+            if self.data_proc is not None:
+                sample_list = getattr(self, sample_list_attr_name)
+                
+                if multiproc == True:
+
+                    num_cpus = multiprocess.cpu_count()
+                    num_procs = num_cpus - 4
+
+                    with Pool() as pool:
+                        diff_list = \
+                            self.data_proc.calc_diff_vs_t(target_sample=self.target.sample,
+                                                          diffusion_sample_list=sample_list,
+                                                          multiproc=True,
+                                                          pool=pool)
+                        
+                        setattr(self, diff_list_attr_name, diff_list)
+                else:
+                    diff_list = self.data_proc.calc_diff_vs_t(self.target.sample,
+                                                              diffusion_sample_list=sample_list,
+                                                              multiproc=False,
+                                                              pool=None)
+                    
+                    setattr(self, diff_list_attr_name, diff_list)
+
+        else:
+            print("Invalied diffusion type (use either 'passive' or 'active')")
+
     def calculate_passive_diff_list(self, multiproc=True):
-        if self.data_proc is not None:
-            if multiproc == True:
-
-                num_cpus = multiprocess.cpu_count()
-                num_procs = num_cpus - 4
-
-                with Pool() as pool:
-                    self.passive_diff_list = \
-                        self.data_proc.calc_diff_vs_t_multiproc(self.target.sample,
-                                                                self.passive_reverse_samples,
-                                                                pool=pool)
-            else:
-                self.passive_diff_list = self.data_proc.calc_diff_vs_t(self.target.sample,
-                                                                       self.passive_reverse_samples)
-
-    # Not merged
+        self.calculate_diff_list(diffusion_type='passive', multiproc=multiproc)
+        
     def calculate_active_diff_list(self, multiproc=True):
-        if self.data_proc is not None:
-            if multiproc == True:
-
-                num_cpus = multiprocess.cpu_count()
-                num_procs = num_cpus - 4
-
-                with Pool(processes=num_procs) as pool:
-                    self.active_diff_list = \
-                        self.data_proc.calc_diff_vs_t_multiproc(self.target.sample,
-                                                                self.active_reverse_samples_x,
-                                                                pool=pool)
-            else:
-                self.active_diff_list = self.data_proc.calc_diff_vs_t(self.target.sample,
-                                                                      self.active_reverse_samples_x)
+        self.calculate_diff_list(diffusion_type='active', multiproc=multiproc)
