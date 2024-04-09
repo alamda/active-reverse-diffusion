@@ -128,7 +128,7 @@ class Diffusion(AbstractBaseClass):
             sample_list_attr_name = 'passive_reverse_samples'
             diff_list_attr_name = 'passive_diff_list'
         elif diffusion_type in ('active', 'Active', 'ACTIVE'):
-            sample_list_attr_name = 'active_reverse_samples'
+            sample_list_attr_name = 'active_reverse_samples_x'
             diff_list_attr_name = 'active_diff_list'
         
         if (sample_list_attr_name is not None) and (diff_list_attr_name is not None):
