@@ -9,7 +9,7 @@ class TargetMultiGaussian2DTest_Factory:
     sigma_list = [1, 1]
     pi_list = [1, 1]
 
-    dim = 50000
+    sample_size = 50000
 
     xmin = -2
     xmax = 2
@@ -26,7 +26,7 @@ def test_gen_target_sample():
                         mu_y_list=myFactory.mu_y_list,
                         sigma_list=myFactory.sigma_list,
                         pi_list=myFactory.pi_list,
-                        dim=myFactory.dim,
+                        sample_size=myFactory.sample_size,
                         xmin=myFactory.xmin,
                         xmax=myFactory.xmax,
                         ymin=myFactory.ymin,

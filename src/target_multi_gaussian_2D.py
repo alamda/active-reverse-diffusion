@@ -10,11 +10,17 @@ class TargetMultiGaussian2D(TargetAbstract):
                  mu_x_list=None, mu_y_list=None,
                  sigma_list=None,
                  pi_list=None,
-                 dim=None,
+                 sample_size=None,
                  xmin=None, xmax=None,
                  ymin=None, ymax=None):
 
-        super().__init__(name=name, dim=dim, xmin=xmin, xmax=xmax)
+        super().__init__(name=name, 
+                         sample_size=sample_size,
+                         sample_dim=2,
+                         xmin=xmin, 
+                         xmax=xmax,
+                         ymin=ymin,
+                         ymax=ymax)
 
         self.ymin = ymin
         self.ymax = ymax
@@ -27,7 +33,7 @@ class TargetMultiGaussian2D(TargetAbstract):
 
         param_list = [self.mu_x_list, self.mu_y_list,
                       self.sigma_list,
-                      self.pi_list, self.dim]
+                      self.pi_list, self.sample_size]
 
         if all(val is not None for val in param_list):
             self.gen_target_sample()
@@ -35,7 +41,7 @@ class TargetMultiGaussian2D(TargetAbstract):
     def gen_target_sample(self, mu_x_list=None, mu_y_list=None,
                           sigma_list=None,
                           pi_list=None,
-                          dim=None,
+                          sample_size=None,
                           num_points_x=50,
                           num_points_y=50,
                           num_bins=50,
@@ -54,8 +60,8 @@ class TargetMultiGaussian2D(TargetAbstract):
         pi_list = self.pi_list if pi_list is None else pi_list
         self.pi_list = pi_list
 
-        dim = self.dim if dim is None else dim
-        self.dim = dim
+        sample_size = self.sample_size if sample_size is None else sample_size
+        self.sample_size = sample_size
 
         xmin = self.xmin if xmin is None else xmin
         self.xmin = xmin
@@ -95,7 +101,7 @@ class TargetMultiGaussian2D(TargetAbstract):
         idx_list = [idx for idx, _ in np.ndenumerate(x_mesh)]
         idx_arr = np.array(idx_list)
 
-        idx_samples = np.random.choice(len(idx_arr), self.dim, p=prob_arr_flat)
+        idx_samples = np.random.choice(len(idx_arr), self.sample_size, p=prob_arr_flat)
 
         x_samples = [x_arr[idx_arr[idx][0]] for idx in idx_samples]
         y_samples = [y_arr[idx_arr[idx][1]] for idx in idx_samples]

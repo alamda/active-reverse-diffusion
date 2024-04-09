@@ -9,3 +9,5 @@ import diffusion
 import diffusion_numeric
 import noise
 import target
+import target_multi_gaussian_1D
+import target_multi_gaussian_2D
