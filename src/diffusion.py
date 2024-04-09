@@ -31,10 +31,13 @@ class Diffusion(AbstractBaseClass):
         self.k = float(k)
 
         # Number of samples generated - inferred from target sample size
-        self.sample_size = int(self.target.shape[0])
+        self.sample_size = int(self.target.sample.shape[0])
         
-        # 1D vs 2D - inferred from target dimension
-        self.sample_dim = int(self.target.shape[1])
+        if len(self.target.sample.shape) == 1:
+            self.sample_dim = 1
+        else:
+            # 1D vs 2D - inferred from target dimension
+            self.sample_dim = int(self.target.sample.shape[1])
 
         self.data_proc = data_proc
 
