@@ -55,7 +55,7 @@ class Plotter:
         active_sample = self.diffusion_object.active_reverse_samples_x[idx].flatten(
         )
 
-        num_hist_bins = self.diffusion_object.data_proc.num_hist_bins
+        num_hist_bins = self.diffusion_object.data_proc.num_hist_bins_x
 
         xmin = self.diffusion_object.data_proc.xmin
         xmax = self.diffusion_object.data_proc.xmax
@@ -150,7 +150,7 @@ class Plotter:
 
     def plot_hist_animation(self, num_bins=None, ymax=None, mp4_fname='hist.mp4'):
         if num_bins is None:
-            num_bins = self.diffusion_object.data_proc.num_hist_bins
+            num_bins = self.diffusion_object.data_proc.num_hist_bins_x
 
         fig, ax = plt.subplots()
 

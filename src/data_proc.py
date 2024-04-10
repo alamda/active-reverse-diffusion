@@ -59,14 +59,14 @@ class DataProc:
         
         if (target_sample_dim == 1) and (test_sample_dim == 1):
             h_target, _ = np.histogram(target_sample,
-                                       bins=self.num_hist_bins[0],
+                                       bins=self.num_hist_bins_x,
                                        density=True,
                                        range=(self.xmin, self.xmax))
             
             h_target /= h_target.sum()
             
             h_test, _ = np.histogram(test_sample,
-                                     bins=self.num_hist_bins[0],
+                                     bins=self.num_hist_bins_x,
                                      density=True,
                                      range=(self.xmin, self.xmax))
 
