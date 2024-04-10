@@ -2,6 +2,7 @@ from diffusion import Diffusion
 
 import numpy as np
 import torch
+from torch.utils.data import DataLoader, TensorDataset
 from tqdm.auto import tqdm
 import itertools
 import copy
@@ -19,7 +20,8 @@ class DiffusionNumeric(Diffusion):
                  dt=None, 
                  k=1, 
                  data_proc=None,
-                 sample_size=None):
+                 sample_size=None,
+                 nn_batch_size=1000):
 
         super().__init__(ofile_base=ofile_base,
                          passive_noise=passive_noise,
@@ -31,7 +33,12 @@ class DiffusionNumeric(Diffusion):
                          data_proc=data_proc,
                          diffusion_type='numeric',
                          sample_size=sample_size)
-
+        
+        if self.sample_size > nn_batch_size:
+            self.nn_batch_size = nn_batch_size
+        else:
+            self.nn_batch_size = self.sample_size
+        
         self.passive_models = None
         self.passive_loss_history = None
 
@@ -73,16 +80,29 @@ class DiffusionNumeric(Diffusion):
 
             optim = torch.optim.AdamW(itertools.chain(
                 score_model.parameters()), lr=1e-2, weight_decay=1e-8,)
+            
+            dataset = TensorDataset(forward_samples[t_idx], forward_samples[0])
+            dataloader = DataLoader(dataset, batch_size=self.nn_batch_size, shuffle=True)
 
             for _ in range(iterations):
-                optim.zero_grad()
+                for id_batch, (sample_batch, sample_zero_batch) in enumerate(dataloader):
 
-                loss, l, scr = self.compute_loss_passive(forward_samples,
-                                                         t_idx,
-                                                         score_model)
+                    sample_batch = sample_batch.reshape(self.nn_batch_size, self.sample_dim).type(torch.DoubleTensor)
+                    sample_zero_batch = sample_zero_batch.reshape(self.nn_batch_size, self.sample_dim).type(torch.DoubleTensor)
+                    
+                    t = t_idx 
+                    
+                    l = -(sample_batch - sample_zero_batch * np.exp(-t*self.dt)) / \
+                        (self.passive_noise.temperature * (1-np.exp(-2*t*self.dt)))
+                        
+                    scr = score_model(sample_batch)
+                    
+                    loss = torch.mean((scr - l)**2)
+                                 
+                    optim.zero_grad()
 
-                loss.backward()
-                optim.step()
+                    loss.backward()
+                    optim.step()
 
             bar.set_description(f'Time:{t_idx} Loss: {loss.item():.4f}')
 
