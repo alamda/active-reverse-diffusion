@@ -6,18 +6,15 @@ import sys
 
 sys.path.insert(0, '../src/')
 
-from data_proc_2D import DataProc2D
+from data_proc import DataProc
 from target_multi_gaussian_2D import TargetMultiGaussian2D
 from noise import NoiseActive, NoisePassive
 from diffusion_numeric import DiffusionNumeric
-from diffusion_numeric_2D import DiffusionNumeric2D
-
-
 
 if __name__ == "__main__":
     ofile_base = "data"
 
-    sample_dim = 100000
+    sample_size = 1000
 
     passive_noise_T = 1.0
 
@@ -35,40 +32,43 @@ if __name__ == "__main__":
     ymin = -1
     ymax = 1
 
-    num_diffusion_steps = 500
+    num_diffusion_steps = 10
     dt = 0.005
     
     num_hist_bins = 10
+    
+    num_passive_iterations=100
+    num_active_iterations=100
 
     myPassiveNoise = NoisePassive(T=passive_noise_T,
-                                  dim=sample_dim)
+                                  dim=sample_size)
 
     myActiveNoise = NoiseActive(Tp=active_noise_Tp,
                                 Ta=active_noise_Ta,
                                 tau=active_noise_tau,
-                                dim=sample_dim)
+                                dim=sample_size)
 
     myTarget = TargetMultiGaussian2D(mu_x_list=mu_x_list,
                                      mu_y_list=mu_y_list,
                                      sigma_list=sigma_list,
                                      pi_list=pi_list,
-                                     dim=sample_dim,
+                                     sample_size=sample_size,
                                      xmin=xmin, xmax=xmax,
                                      ymin=ymin, ymax=ymax)
 
     myTarget.gen_target_sample()
 
-    myDataProc = DataProc2D(xmin=xmin, xmax=xmax, 
-                            ymin=ymin, ymax=ymax, 
-                            num_hist_bins=num_hist_bins)
+    myDataProc = DataProc(xmin=xmin, xmax=xmax, 
+                          ymin=ymin, ymax=ymax, 
+                          num_hist_bins=num_hist_bins)
 
-    myDiffNum = DiffusionNumeric2D(ofile_base=ofile_base,
+    myDiffNum = DiffusionNumeric(ofile_base=ofile_base,
                                  passive_noise=myPassiveNoise,
                                  active_noise=myActiveNoise,
                                  target=myTarget,
                                  num_diffusion_steps=num_diffusion_steps,
                                  dt=dt,
-                                 sample_dim=sample_dim,
+                                 sample_size=sample_size,
                                  data_proc=myDataProc)
 
      
@@ -116,11 +116,11 @@ if __name__ == "__main__":
             with open(f"{ofile_base}.pkl", 'rb') as f:
                 myDiffNum = pickle.load(f)
         else:
-            myDiffNum.train_diffusion_passive(iterations=2000)
+            myDiffNum.train_diffusion_passive(iterations=num_passive_iterations)
             myDiffNum.sample_from_diffusion_passive()
             myDiffNum.calculate_passive_diff_list()
             
-            myDiffNum.train_diffusion_active(iterations=5000)
+            myDiffNum.train_diffusion_active(iterations=num_active_iterations)
             myDiffNum.sample_from_diffusion_active()
             myDiffNum.calculate_active_diff_list()
             

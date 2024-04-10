@@ -4,10 +4,19 @@ import numpy as np
 
 
 class TargetMultiGaussian(TargetAbstract):
-    def __init__(self, name="multi_gauss", sigma_list=None, mu_list=None, pi_list=None, dim=None,
-                 xmin=None, xmax=None):
+    def __init__(self, name="multi_gauss", 
+                 sigma_list=None, 
+                 mu_list=None, 
+                 pi_list=None, 
+                 sample_size=None,
+                 xmin=None, 
+                 xmax=None):
 
-        super().__init__(name=name, dim=dim, xmin=xmin, xmax=xmax)
+        super().__init__(name=name, 
+                         sample_size=sample_size,
+                         sample_dim=1, 
+                         xmin=xmin, 
+                         xmax=xmax)
 
         self.sigma_list = sigma_list
         self.mu_list = mu_list
@@ -16,12 +25,18 @@ class TargetMultiGaussian(TargetAbstract):
         if (self.sigma_list is not None) and \
             (self.mu_list is not None) and \
             (self.pi_list is not None) and \
-                (self.dim is not None):
+                (self.sample_size is not None):
 
             self.gen_target_sample()
 
-    def gen_target_sample(self, sigma_list=None, mu_list=None, pi_list=None, dim=None,
-                          xmin=None, xmax=None, num_points=50000):
+    def gen_target_sample(self, 
+                          sigma_list=None, 
+                          mu_list=None, 
+                          pi_list=None, 
+                          sample_size=None,
+                          xmin=None, 
+                          xmax=None, 
+                          num_points=50000):
         sigma_list = self.sigma_list if sigma_list is None else sigma_list
         self.sigma_list = sigma_list
 
@@ -31,8 +46,8 @@ class TargetMultiGaussian(TargetAbstract):
         pi_list = self.pi_list if pi_list is None else pi_list
         self.pi_list = pi_list
 
-        dim = self.dim if dim is None else dim
-        self.dim = dim
+        sample_size = self.sample_size if sample_size is None else sample_size
+        self.sample_size = sample_size
 
         self.xmin = xmin if xmin is not None else self.xmin
 
@@ -51,7 +66,7 @@ class TargetMultiGaussian(TargetAbstract):
         self.prob_arr = y_arr
 
         self.sample = torch.from_numpy(
-            np.random.choice(x_arr, size=self.dim, p=y_arr))
+            np.random.choice(x_arr, size=self.sample_size, p=y_arr))
 
 
 if __name__ == "__main__":
@@ -60,7 +75,7 @@ if __name__ == "__main__":
     mu_list = [-1.2, 1.2]
     pi_list = [1.0, 1.0]
 
-    dim = 50000
+    sample_size = 50000
 
     # Setting target parameters after creating the target object
 
@@ -69,7 +84,7 @@ if __name__ == "__main__":
     myTarget.gen_target_sample(sigma_list=sigma_list,
                                mu_list=mu_list,
                                pi_list=pi_list,
-                               dim=dim,
+                               sample_size=sample_size,
                                xmin=-5,
                                xmax=5)
 
@@ -78,12 +93,12 @@ if __name__ == "__main__":
     myTarget = TargetMultiGaussian(sigma_list=sigma_list,
                                    mu_list=mu_list,
                                    pi_list=pi_list,
-                                   dim=dim,
+                                   sample_size=sample_size,
                                    xmin=-5,
                                    xmax=5)
 
     # Plot a histogram to target sample and save to file
 
     myTarget.plot_target_hist(fname="multi_gauss_target_example.png",
-                              title=f"sigma={sigma_list}, mu={mu_list}, pi={pi_list}, dim={dim}",
+                              title=f"sigma={sigma_list}, mu={mu_list}, pi={pi_list}, sample_size={sample_size}",
                               hist_range=(-5, 5))

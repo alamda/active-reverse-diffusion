@@ -1,8 +1,12 @@
+import sys
+
+sys.path.insert(0, '../src/')
+
 from diffusion_numeric import DiffusionNumeric
-from diffusion_analytic import DiffusionAnalytic
+from diffusion_analytic_1D import DiffusionAnalytic
 from noise import NoiseActive, NoisePassive
-from target_multi_gaussian import TargetMultiGaussian
-from target_quartic import TargetQuartic
+from target_multi_gaussian_1D import TargetMultiGaussian
+from target_quartic_1D import TargetQuartic
 from data_proc import DataProc
 
 import pickle
@@ -14,7 +18,7 @@ import multiprocess
 from multiprocess import Pool
 import tqdm
 
-from read_configs import Configs
+from read_configs_1D import Configs
 
 if __name__ == "__main__":
     myConfigs = Configs(filename='diffusion.conf')
@@ -34,7 +38,7 @@ if __name__ == "__main__":
             myTarget = TargetMultiGaussian(mu_list=myConfigs.mu_list,
                                            sigma_list=myConfigs.sigma_list,
                                            pi_list=myConfigs.pi_list,
-                                           dim=myConfigs.sample_dim,
+                                           sample_size=myConfigs.sample_dim,
                                            xmin=myConfigs.xmin,
                                            xmax=myConfigs.xmax)
 
@@ -44,7 +48,7 @@ if __name__ == "__main__":
                                      b=myConfigs.b,
                                      xmin=myConfigs.xmin,
                                      xmax=myConfigs.xmax,
-                                     dim=myConfigs.sample_dim)
+                                     sample_size=myConfigs.sample_dim)
 
         myDataProc = DataProc(xmin=myConfigs.xmin, xmax=myConfigs.xmax)
 
@@ -55,7 +59,6 @@ if __name__ == "__main__":
                                          target=myTarget,
                                          num_diffusion_steps=myConfigs.num_diffusion_steps,
                                          dt=myConfigs.dt,
-                                         sample_dim=myConfigs.sample_dim,
                                          data_proc=myDataProc)
 
             if myConfigs.passive_training_iterations is not None:
@@ -70,15 +73,15 @@ if __name__ == "__main__":
             else:
                 myDiffNum.train_diffusion_active(iterations=1000)
 
-        elif myConfigs.diffusion_calculation_type in ('analytic'):
-            myDiffNum = DiffusionAnalytic(ofile_base=myConfigs.ofile_base,
-                                          passive_noise=myPassiveNoise,
-                                          active_noise=myActiveNoise,
-                                          target=myTarget,
-                                          num_diffusion_steps=myConfigs.num_diffusion_steps,
-                                          dt=myConfigs.dt,
-                                          sample_dim=myConfigs.sample_dim,
-                                          data_proc=myDataProc)
+        # elif myConfigs.diffusion_calculation_type in ('analytic'):
+        #     myDiffNum = DiffusionAnalytic(ofile_base=myConfigs.ofile_base,
+        #                                   passive_noise=myPassiveNoise,
+        #                                   active_noise=myActiveNoise,
+        #                                   target=myTarget,
+        #                                   num_diffusion_steps=myConfigs.num_diffusion_steps,
+        #                                   dt=myConfigs.dt,
+        #                                   sample_so=myConfigs.sample_dim,
+        #                                   data_proc=myDataProc)
 
         myDiffNum.sample_from_diffusion_passive()
         myDiffNum.calculate_passive_diff_list()

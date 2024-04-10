@@ -11,8 +11,15 @@ from multiprocess import Pool
 
 
 class DiffusionNumeric(Diffusion):
-    def __init__(self, ofile_base="", passive_noise=None, active_noise=None, target=None,
-                 num_diffusion_steps=None, dt=None, k=1, sample_dim=None, data_proc=None):
+    def __init__(self, ofile_base="", 
+                 passive_noise=None, 
+                 active_noise=None, 
+                 target=None,
+                 num_diffusion_steps=None, 
+                 dt=None, 
+                 k=1, 
+                 data_proc=None,
+                 sample_size=None):
 
         super().__init__(ofile_base=ofile_base,
                          passive_noise=passive_noise,
@@ -21,9 +28,9 @@ class DiffusionNumeric(Diffusion):
                          num_diffusion_steps=num_diffusion_steps,
                          dt=dt,
                          k=k,
-                         sample_dim=sample_dim,
                          data_proc=data_proc,
-                         diffusion_type='numeric')
+                         diffusion_type='numeric',
+                         sample_size=sample_size)
 
         self.passive_models = None
         self.passive_loss_history = None
@@ -34,12 +41,12 @@ class DiffusionNumeric(Diffusion):
         self.active_loss_history_eta = None
 
     def compute_loss_passive(self, forward_samples, t, score_model):
-        xt = forward_samples[t].type(torch.DoubleTensor)         # x(t)
+        sample_t = forward_samples[t].reshape(self.sample_size, self.sample_dim).type(torch.DoubleTensor)
 
-        l = -(xt - forward_samples[0] * np.exp(-t*self.dt)) / \
+        l = -(sample_t - forward_samples[0] * np.exp(-t*self.dt)) / \
              (self.passive_noise.temperature * (1-np.exp(-2*t*self.dt)))
 
-        scr = score_model(xt)
+        scr = score_model(sample_t)
         loss = torch.mean((scr - l)**2)
 
         return loss, torch.mean(l**2), torch.mean(scr**2)
@@ -50,12 +57,6 @@ class DiffusionNumeric(Diffusion):
 
         forward_samples = self.forward_diffusion_passive()
 
-        if len(forward_samples[0].shape) == 1:
-            num_points = forward_samples[0].shape[0]
-
-            forward_samples = [f.reshape((self.sample_dim, 1))
-                               for f in forward_samples]
-
         bar = tqdm(range(1, self.num_diffusion_steps))
 
         t_idx = 1
@@ -64,16 +65,14 @@ class DiffusionNumeric(Diffusion):
 
         for e in bar:
             score_model = torch.nn.Sequential(
-                torch.nn.Linear(1, nrnodes), torch.nn.Tanh(),
+                torch.nn.Linear(self.sample_dim, nrnodes), torch.nn.Tanh(),
                 torch.nn.Linear(nrnodes, nrnodes), torch.nn.Tanh(),
                 torch.nn.Linear(nrnodes, nrnodes), torch.nn.Tanh(),
-                torch.nn.Linear(nrnodes, 1)
+                torch.nn.Linear(nrnodes, self.sample_dim)
             ).double()
 
             optim = torch.optim.AdamW(itertools.chain(
                 score_model.parameters()), lr=1e-2, weight_decay=1e-8,)
-
-            loss = 100
 
             for _ in range(iterations):
                 optim.zero_grad()
@@ -108,10 +107,10 @@ class DiffusionNumeric(Diffusion):
         if all_models is None:
             all_models = self.passive_models
 
-        x_t = self.passive_noise.temperature * \
-            torch.randn(self.sample_dim, 1).type(torch.DoubleTensor)
+        sample_t = self.passive_noise.temperature * \
+            torch.randn(self.sample_size, self.sample_dim).type(torch.DoubleTensor)
 
-        samples = [x_t.detach()]
+        samples = [sample_t.detach()]
 
         time_step_list = []
 
@@ -130,26 +129,27 @@ class DiffusionNumeric(Diffusion):
 
         self.num_passive_reverse_diffusion_steps = reverse_diffusion_step_start + 1
 
-        for t in range(reverse_diffusion_step_start, 0, -1):
+        for t_idx in range(reverse_diffusion_step_start, 0, -1):
 
-            time_now = t*self.dt
+            time_now = t_idx*self.dt
 
             time_step_list.append(time_now)
 
-            F = all_models[t](x_t)
+            F = all_models[t_idx](sample_t)
             # If using the total score function
 
-            x_t = x_t + x_t*self.dt + 2*self.passive_noise.temperature*F*self.dt + \
+            sample_t = sample_t + sample_t*self.dt + \
+                2*self.passive_noise.temperature*F*self.dt + \
                 np.sqrt(2*self.passive_noise.temperature*self.dt) * \
-                torch.randn(self.sample_dim, 1)
+                torch.randn(self.sample_size, self.sample_dim)
 
-            samples.append(x_t.detach())
+            samples.append(sample_t.detach())
 
         self.passive_reverse_time_arr = np.array(time_step_list)
 
         self.passive_reverse_samples = samples
 
-        return x_t.detach(), samples
+        return sample_t.detach(), samples
 
     def compute_loss_active(self, t_idx,
                             forward_samples_x, forward_samples_eta,
@@ -219,15 +219,6 @@ class DiffusionNumeric(Diffusion):
 
         forward_samples_x, forward_samples_eta = self.forward_diffusion_active()
 
-        if len(forward_samples_x[0]) == 1:
-            num_points = forward_samples_x[0].shape[0]
-            forward_samples_x = [f.reshape((num_points, 1))
-                                 for f in forward_samples_x]
-
-        if len(forward_samples_eta[0]) == 1:
-            num_points = forward_samples_eta[0].shape[0]
-            forward_samples_eta = [f.reshape((num_points, 1))
-                                   for f in forward_samples_eta]
         t_idx = 1
 
         time_step_list = []
@@ -236,16 +227,16 @@ class DiffusionNumeric(Diffusion):
 
         for e in bar:
             score_model_x = torch.nn.Sequential(
-                torch.nn.Linear(2, nrnodes), torch.nn.Tanh(),
+                torch.nn.Linear(self.sample_dim*2, nrnodes), torch.nn.Tanh(),
                 torch.nn.Linear(nrnodes, nrnodes), torch.nn.Tanh(),
                 torch.nn.Linear(nrnodes, nrnodes), torch.nn.Tanh(),
-                torch.nn.Linear(nrnodes, 1)
+                torch.nn.Linear(nrnodes, self.sample_dim)
             ).double()
 
             score_model_eta = torch.nn.Sequential(
-                torch.nn.Linear(2, nrnodes), torch.nn.Tanh(),
+                torch.nn.Linear(self.sample_dim*2, nrnodes), torch.nn.Tanh(),
                 torch.nn.Linear(nrnodes, nrnodes), torch.nn.Tanh(),
-                torch.nn.Linear(nrnodes, 1)
+                torch.nn.Linear(nrnodes, self.sample_dim)
             ).double()
 
             optim_x = torch.optim.AdamW(itertools.chain(
@@ -253,8 +244,6 @@ class DiffusionNumeric(Diffusion):
 
             optim_eta = torch.optim.AdamW(itertools.chain(
                 score_model_eta.parameters()), lr=1e-2, weight_decay=1e-8,)
-
-            loss = 100
 
             for _ in range(iterations):
                 optim_x.zero_grad()
@@ -309,11 +298,11 @@ class DiffusionNumeric(Diffusion):
                     (self.active_noise.temperature.active /
                      (self.k**2 * self.active_noise.correlation_time + self.k)
                      )
-                    ) * torch.randn([self.sample_dim, 1]).type(torch.DoubleTensor)
+                    ) * torch.randn([self.sample_size, self.sample_dim]).type(torch.DoubleTensor)
 
         eta = np.sqrt(self.active_noise.temperature.active /
                       self.active_noise.correlation_time) * \
-            torch.randn([self.sample_dim, 1]).type(torch.DoubleTensor)
+            torch.randn([self.sample_size, self.sample_dim]).type(torch.DoubleTensor)
 
         samples_x = [x.detach()]
         samples_eta = [eta.detach()]
@@ -327,14 +316,14 @@ class DiffusionNumeric(Diffusion):
 
         self.num_active_rverse_diffusion_steps = reverse_diffusion_step_start + 1
 
-        for t in range(reverse_diffusion_step_start, 0, -1):
+        for t_idx in range(reverse_diffusion_step_start, 0, -1):
 
-            time_now = t*self.dt
+            time_now = t_idx*self.dt
             time_step_list.append(time_now)
             xin = torch.cat((x, eta), dim=1)
 
-            Fx = all_models_x[t](xin)
-            Feta = all_models_eta[t](xin)
+            Fx = all_models_x[t_idx](xin)
+            Feta = all_models_eta[t_idx](xin)
 
             x = x + self.dt*(x-eta) + \
                 2*self.active_noise.temperature.passive*Fx*self.dt + \

@@ -1,5 +1,9 @@
-from plotter import Plotter
-from read_configs import Configs
+import sys
+
+sys.path.insert(0, '../src/')
+
+from plotter_1D import Plotter
+from read_configs_1D import Configs
 
 import os
 import pickle
