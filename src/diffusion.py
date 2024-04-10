@@ -16,7 +16,8 @@ class Diffusion(AbstractBaseClass):
                  dt=None, 
                  k=1, 
                  data_proc=None, 
-                 diffusion_type=None):
+                 diffusion_type=None,
+                 sample_size=None):
         
         self.ofile_base = str(ofile_base)
 
@@ -29,6 +30,8 @@ class Diffusion(AbstractBaseClass):
         self.dt = float(dt)
 
         self.k = float(k)
+        
+        self.sample_size = sample_size
 
         # Number of samples generated - inferred from target sample size
         self.sample_size = int(self.target.sample.shape[0])

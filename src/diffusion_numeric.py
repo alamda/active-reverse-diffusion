@@ -18,7 +18,8 @@ class DiffusionNumeric(Diffusion):
                  num_diffusion_steps=None, 
                  dt=None, 
                  k=1, 
-                 data_proc=None):
+                 data_proc=None,
+                 sample_size=None):
 
         super().__init__(ofile_base=ofile_base,
                          passive_noise=passive_noise,
@@ -28,7 +29,8 @@ class DiffusionNumeric(Diffusion):
                          dt=dt,
                          k=k,
                          data_proc=data_proc,
-                         diffusion_type='numeric')
+                         diffusion_type='numeric',
+                         sample_size=sample_size)
 
         self.passive_models = None
         self.passive_loss_history = None
