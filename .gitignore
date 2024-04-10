@@ -6,6 +6,9 @@ runs/
 *.dot
 *.mp4
 
+passive_diff_list.txt
+active_diff_list.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
