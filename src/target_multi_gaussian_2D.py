@@ -108,4 +108,4 @@ class TargetMultiGaussian2D(TargetAbstract):
 
         sample = list(zip(x_samples, y_samples))
         
-        self.sample = np.array([list(s) for s in sample])
+        self.sample = torch.from_numpy(np.array([list(s) for s in sample]))
