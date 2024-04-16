@@ -59,6 +59,8 @@ class TargetAbstract(AbstractBaseClass):
             
             bar = tqdm(range(num_batches))
             
+            bar.set_description("Target sample generation")
+            
             for e in bar:
                 sample_idx_list = np.random.choice(len(self.target_hist_idx_arr), gen_batch_size, 
                                               p=self.target_hist_idx_prob_arr)

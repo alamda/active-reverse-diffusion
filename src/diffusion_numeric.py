@@ -104,7 +104,7 @@ class DiffusionNumeric(Diffusion):
                     loss.backward()
                     optim.step()
 
-            bar.set_description(f'Time:{t_idx} Loss: {loss.item():.4f}')
+            bar.set_description(f'Passive training - Time: {t_idx} Loss: {loss.item():.4f}')
 
             all_models.append(copy.deepcopy(score_model))
 
@@ -318,7 +318,7 @@ class DiffusionNumeric(Diffusion):
                     optim_eta.step()
 
             bar.set_description(
-                f'Time:{t_idx} Loss: {loss_x.item():.4f} Fx: {loss_Fx.item():.4f} scr_x: {loss_scr_x.item():.4f}')
+                f'Active training - Time: {t_idx} Loss: {loss_x.item():.4f} Fx: {loss_Fx.item():.4f} scr_x: {loss_scr_x.item():.4f}')
 
             all_models_x.append(copy.deepcopy(score_model_x))
             all_models_eta.append(copy.deepcopy(score_model_eta))

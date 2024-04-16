@@ -8,6 +8,8 @@ import numpy as np
 import torch
 import mmap
 
+from tqdm.auto import tqdm
+
 class Diffusion(AbstractBaseClass):
     def __init__(self, ofile_base="", 
                  passive_noise=None, 
@@ -82,7 +84,11 @@ class Diffusion(AbstractBaseClass):
         
         sample_t = self.target.sample.detach()
         
-        for t_idx in range(self.num_diffusion_steps):
+        bar = tqdm(range(0, self.num_diffusion_steps))
+        
+        bar.set_description("Forward diffusion - passive")
+        
+        for t_idx, e in enumerate(bar):
             sample_t = sample_t - self.dt*sample_t + \
                 np.sqrt(2*self.passive_noise.temperature*self.dt) * \
                 torch.normal(torch.zeros_like(self.target.sample),
@@ -125,7 +131,11 @@ class Diffusion(AbstractBaseClass):
         
         sample_t = self.target.sample
 
-        for t_idx in range(self.num_diffusion_steps):
+        bar = tqdm(range(self.num_diffusion_steps))
+        
+        bar.set_description("Forward diffusion - active")
+
+        for t_idx, e in enumerate(bar):
             sample_t = sample_t - self.dt*sample_t + self.dt*eta + \
                 np.sqrt(2*self.active_noise.temperature.passive*self.dt) * \
                 torch.normal(torch.zeros_like(self.target.sample),
