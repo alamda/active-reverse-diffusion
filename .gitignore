@@ -5,6 +5,9 @@ runs/
 *.gv
 *.dot
 *.mp4
+*.npy
+
+scripts/diffusion.conf
 
 passive_diff_list.txt
 active_diff_list.txt
