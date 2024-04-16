@@ -64,7 +64,10 @@ class DiffusionNumeric(Diffusion):
         loss_history = []
         all_models = []
 
-        forward_samples = self.forward_diffusion_passive()
+        if self.passive_forward_samples is not None:
+            forward_samples = self.passive_forward_samples
+        else:
+            forward_samples = self.forward_diffusion_passive()
 
         bar = tqdm(range(1, self.num_diffusion_steps))
 
@@ -247,7 +250,11 @@ class DiffusionNumeric(Diffusion):
         all_models_x = []
         all_models_eta = []
 
-        forward_samples_x, forward_samples_eta = self.forward_diffusion_active()
+        if (self.active_forward_samples_x is not None) and (self.active_forward_samples_eta is not None):
+            forward_samples_x = self.active_forward_samples_x
+            forward_samples_eta = self.active_forward_samples_eta
+        else:
+            forward_samples_x, forward_samples_eta = self.forward_diffusion_active()
 
         t_idx = 1
 
