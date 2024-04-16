@@ -10,6 +10,7 @@ import copy
 import multiprocess
 from multiprocess import Pool
 
+import mmap
 
 class DiffusionNumeric(Diffusion):
     def __init__(self, ofile_base="", 
@@ -126,7 +127,8 @@ class DiffusionNumeric(Diffusion):
         sample_t = self.passive_noise.temperature * \
             torch.randn(self.sample_size, self.sample_dim).type(torch.DoubleTensor)
 
-        samples = [sample_t.detach()]
+        with open(self.reverse_passive_fname, "wb") as f:
+            f.write(sample_t.detach().numpy().tobytes())
 
         time_step_list = []
 
@@ -159,13 +161,24 @@ class DiffusionNumeric(Diffusion):
                 np.sqrt(2*self.passive_noise.temperature*self.dt) * \
                 torch.randn(self.sample_size, self.sample_dim)
 
-            samples.append(sample_t.detach())
+            with open(self.reverse_passive_fname, "ab") as f:
+                f.write(sample_t.detach().numpy().tobytes())
 
         self.passive_reverse_time_arr = np.array(time_step_list)
 
-        self.passive_reverse_samples = samples
+        with open(self.reverse_passive_fname, "r+b") as f:
+            mm_r = mmap.mmap(f.fileno(), 0)
+            mm_r_arr = np.frombuffer(mm_r, dtype=np.double)
+            
+            _ = mm_r_arr.shape
+            
+            self.passive_reverse_samples = \
+                torch.from_numpy(np.reshape(mm_r_arr, \
+                    (len(time_step_list)+1, self.sample_size, self.sample_dim)))
+                
+            self.passive_reverse_samples = [x for x in self.passive_reverse_samples]
 
-        return sample_t.detach(), samples
+        return sample_t.detach(), self.passive_reverse_samples
 
     def compute_loss_active(self, t_idx,
                             forward_samples_x, forward_samples_x_zero,
@@ -339,9 +352,12 @@ class DiffusionNumeric(Diffusion):
                       self.active_noise.correlation_time) * \
             torch.randn([self.sample_size, self.sample_dim]).type(torch.DoubleTensor)
 
-        samples_x = [x.detach()]
-        samples_eta = [eta.detach()]
-
+        with open(self.reverse_x_active_fname, "wb") as f:
+            f.write(x.detach().numpy().tobytes())
+            
+        with open(self.reverse_eta_active_fname, "wb") as f:
+            f.write(eta.detach().numpy().tobytes())
+            
         time_step_list = []
 
         if time is None:
@@ -372,12 +388,36 @@ class DiffusionNumeric(Diffusion):
                 np.sqrt(2 * self.active_noise.temperature.active * self.dt) * \
                 torch.randn(eta.shape)
 
-            samples_x.append(x.detach())
-            samples_eta.append(eta.detach())
+            with open(self.reverse_x_active_fname, "ab") as f:
+                f.write(x.detach().numpy().tobytes())
+                
+            with open(self.reverse_eta_active_fname, "ab") as f:
+                f.write(eta.detach().numpy().tobytes())
+
+        with open(self.reverse_x_active_fname, "r+b") as f:
+            mm_r_x = mmap.mmap(f.fileno(), 0)
+            mm_r_x_arr = np.frombuffer(mm_r_x, dtype=np.double)
+            
+            _ = mm_r_x_arr.shape
+            
+            self.active_reverse_samples_x = \
+                torch.from_numpy(np.reshape(mm_r_x_arr, \
+                    (len(time_step_list) + 1, self.sample_size, self.sample_dim)))
+                
+            self.active_reverse_samples_x = [ x for x in self.active_reverse_samples_x]
+
+        with open(self.reverse_eta_active_fname, "r+b") as f:
+            mm_r_eta = mmap.mmap(f.fileno(), 0)
+            mm_r_eta_arr = np.frombuffer(mm_r_eta, dtype=np.double)
+            
+            _ = mm_r_eta_arr.shape
+            
+            self.active_reverse_samples_eta = \
+                torch.from_numpy(np.reshape(mm_r_eta_arr, \
+                    (len(time_step_list) +1, self.sample_size, self.sample_dim)))
+                
+            self.active_reverse_samples_eta = [ eta for eta in self.active_reverse_samples_eta]
 
         self.active_reverse_time_arr = np.array(time_step_list)
 
-        self.active_reverse_samples_x = samples_x
-        self.active_reverse_samples_eta = samples_eta
-
-        return x.detach(), eta.detach(), samples_x, samples_eta
+        return x.detach(), eta.detach(), self.active_reverse_samples_x, self.active_reverse_samples_eta

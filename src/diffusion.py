@@ -6,6 +6,7 @@ from multiprocess import Pool
 
 import numpy as np
 import torch
+import mmap
 
 class Diffusion(AbstractBaseClass):
     def __init__(self, ofile_base="", 
@@ -17,9 +18,21 @@ class Diffusion(AbstractBaseClass):
                  k=1, 
                  data_proc=None, 
                  diffusion_type=None,
-                 sample_size=None):
+                 sample_size=None, 
+                 forward_passive_fname="forward_passive.npy",
+                 forward_x_active_fname="forward_x_active.npy", 
+                 forward_eta_active_fname="forward_eta_active.npy",
+                 reverse_passive_fname="reverse_passive.npy", 
+                 reverse_x_active_fname="reverse_x_active.npy", 
+                 reverse_eta_active_fname="reverse_eta_active.npy"):
         
         self.ofile_base = str(ofile_base)
+        self.forward_passive_fname = forward_passive_fname
+        self.forward_x_active_fname = forward_x_active_fname
+        self.forward_eta_active_fname = forward_eta_active_fname
+        self.reverse_passive_fname = reverse_passive_fname
+        self.reverse_x_active_fname = reverse_x_active_fname
+        self.reverse_eta_active_fname = reverse_eta_active_fname
 
         self.passive_noise = passive_noise
         self.active_noise = active_noise
@@ -64,7 +77,8 @@ class Diffusion(AbstractBaseClass):
         self.num_active_reverse_diffusion_steps = None
 
     def forward_diffusion_passive(self):
-        forward_diffusion_sample_list = [self.target.sample]
+        with open(self.forward_passive_fname, "wb") as f:
+            f.write(self.target.sample.numpy().tobytes())
         
         sample_t = self.target.sample.detach()
         
@@ -73,10 +87,21 @@ class Diffusion(AbstractBaseClass):
                 np.sqrt(2*self.passive_noise.temperature*self.dt) * \
                 torch.normal(torch.zeros_like(self.target.sample),
                              torch.ones_like(self.target.sample))
-
-            forward_diffusion_sample_list.append(sample_t)
+            
+            with open(self.forward_passive_fname, "ab") as f:
+                f.write(sample_t.numpy().tobytes())
        
-        self.passive_forward_samples = forward_diffusion_sample_list
+        with open(self.forward_passive_fname, "r+b") as f:
+            mm = mmap.mmap(f.fileno(), 0)
+            mm_arr = np.frombuffer(mm, dtype=np.double)
+            
+            _ = mm_arr.shape
+            
+            self.passive_forward_samples = \
+                torch.from_numpy(np.reshape(mm_arr, \
+                    (self.num_diffusion_steps + 1, self.sample_size, self.sample_dim)))
+        
+            self.passive_forward_samples = [ x for x in self.passive_forward_samples]
         
         return self.passive_forward_samples
 
@@ -85,13 +110,19 @@ class Diffusion(AbstractBaseClass):
         """Reverse diffusion process with passive noise"""
 
     def forward_diffusion_active(self):
+
         eta = torch.normal(torch.zeros_like(self.target.sample),
                            np.sqrt(self.active_noise.temperature.active /
                                    self.active_noise.correlation_time)
                            * torch.ones_like(self.target.sample)
                            )
-        samples = [self.target.sample]
-        eta_samples = [eta]
+        
+        with open(self.forward_x_active_fname, "wb") as f:
+            f.write(self.target.sample.numpy().tobytes())
+        
+        with open(self.forward_eta_active_fname, "wb") as f:
+            f.write(eta.numpy().tobytes())
+        
         sample_t = self.target.sample
 
         for t_idx in range(self.num_diffusion_steps):
@@ -105,19 +136,37 @@ class Diffusion(AbstractBaseClass):
                 np.sqrt(2*self.active_noise.temperature.active*self.dt) * \
                 torch.normal(torch.zeros_like(eta), torch.ones_like(eta))
 
-            samples.append(sample_t)
-            eta_samples.append(eta)
+            with open(self.forward_x_active_fname, "ab") as f:
+                f.write(sample_t.numpy().tobytes())
+                
+            with open(self.forward_eta_active_fname, "ab") as f:
+                f.write(eta.numpy().tobytes())
+                
+        with open(self.forward_x_active_fname, "r+b") as f:
+            mm_x = mmap.mmap(f.fileno(), 0)
+            mm_x_arr = np.frombuffer(mm_x, dtype=np.double)
+            
+            _ = mm_x_arr.shape
+            
+            self.active_forward_samples_x = \
+                torch.from_numpy(np.reshape(mm_x_arr, 
+                                            (self.num_diffusion_steps + 1, self.sample_size, self.sample_dim))) 
+            
+            self.active_forward_samples_x = [ x for x in self.active_forward_samples_x]    
+        
+        with open(self.forward_eta_active_fname, "r+b") as f:
+            mm_eta = mmap.mmap(f.fileno(), 0)
+            mm_eta_arr = np.frombuffer(mm_eta, dtype=np.double)
+            
+            _ = mm_eta_arr.shape
+            
+            self.active_forward_samples_eta = \
+                torch.from_numpy(np.reshape(mm_eta_arr, 
+                                            (self.num_diffusion_steps + 1, self.sample_size, self.sample_dim))) 
 
-        samples = [s.reshape((self.sample_size, self.sample_dim)).type(torch.DoubleTensor)
-                   for s in samples]
+            self.active_forward_samples_eta = [eta for eta in self.active_forward_samples_eta]
 
-        eta_samples = [s.reshape((self.sample_size, self.sample_dim)).type(torch.DoubleTensor)
-                       for s in eta_samples]
-
-        self.active_forward_samples_x = samples
-        self.active_forward_samples_eta = eta_samples
-
-        return samples, eta_samples
+        return self.active_forward_samples_x, self.active_forward_samples_eta
 
     @abstractmethod
     def sample_from_diffusion_active(self):
