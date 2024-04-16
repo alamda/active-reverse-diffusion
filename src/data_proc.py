@@ -73,8 +73,8 @@ class DataProc:
             h_test /= h_test.sum()
             
         elif (target_sample_dim == 2) and (test_sample_dim == 2):
-            target_sample_x = np.array(target_sample)[:,0]
-            target_sample_y = np.array(target_sample)[:,1]
+            target_sample_x = target_sample[:,0].numpy()
+            target_sample_y = target_sample[:,1].numpy()
             
             h_target, _, _ =np.histogram2d(target_sample_x, 
                                            target_sample_y,
@@ -86,8 +86,8 @@ class DataProc:
 
             h_target /= h_target.sum().sum()
 
-            test_sample_x = np.array(test_sample)[:,0]
-            test_sample_y = np.array(test_sample)[:,1]
+            test_sample_x = test_sample[:,0].numpy()
+            test_sample_y = test_sample[:,1].numpy()
                 
             h_test, _, _ = np.histogram2d(test_sample_x,
                                           test_sample_y,
