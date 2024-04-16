@@ -91,8 +91,6 @@ class TargetAbstract(AbstractBaseClass):
             
             _ = mm_arr.shape
             
-            breakpoint()
-            
             self.sample = torch.from_numpy(np.reshape(mm_arr, (self.sample_size, self.sample_dim)))
 
     def plot_target_hist(self,

@@ -57,8 +57,6 @@ if __name__ == "__main__":
                                      ymin=ymin, ymax=ymax,
                                      num_bins=num_hist_bins)
 
-    breakpoint()
-
     myDataProc = DataProc(xmin=xmin, xmax=xmax, 
                           ymin=ymin, ymax=ymax, 
                           num_hist_bins=num_hist_bins)
