@@ -14,7 +14,7 @@ from diffusion_numeric import DiffusionNumeric
 if __name__ == "__main__":
     ofile_base = "data"
 
-    sample_size = 1000
+    sample_size = 100000000
 
     passive_noise_T = 1.0
 
@@ -54,9 +54,10 @@ if __name__ == "__main__":
                                      pi_list=pi_list,
                                      sample_size=sample_size,
                                      xmin=xmin, xmax=xmax,
-                                     ymin=ymin, ymax=ymax)
+                                     ymin=ymin, ymax=ymax,
+                                     num_bins=num_hist_bins)
 
-    myTarget.gen_target_sample()
+    breakpoint()
 
     myDataProc = DataProc(xmin=xmin, xmax=xmax, 
                           ymin=ymin, ymax=ymax, 
@@ -109,7 +110,6 @@ if __name__ == "__main__":
                                                                 range=[[xmin, xmax], [ymin, ymax]])
         
         
-        myDiffNum.target.gen_target_sample(num_bins=num_hist_bins)
         # myDiffNum.num_diffusion_steps=1
 
         if os.path.isfile(f"{ofile_base}.pkl"):

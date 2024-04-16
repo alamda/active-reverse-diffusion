@@ -12,7 +12,11 @@ class TargetMultiGaussian2D(TargetAbstract):
                  pi_list=None,
                  sample_size=None,
                  xmin=None, xmax=None,
-                 ymin=None, ymax=None):
+                 ymin=None, ymax=None, 
+                 num_bins=None,
+                 num_points_x=None,
+                 num_points_y=None
+                 ):
 
         super().__init__(name=name, 
                          sample_size=sample_size,
@@ -35,8 +39,12 @@ class TargetMultiGaussian2D(TargetAbstract):
                       self.sigma_list,
                       self.pi_list, self.sample_size]
 
+
         if all(val is not None for val in param_list):
-            self.gen_target_sample()
+            if (num_bins is not None):
+                self.gen_target_sample(num_bins=num_bins)
+            elif (num_points_x is not None) and (num_points_y is not None):
+                self.gen_target_sample(num_points_x=num_points_x, num_points_y=num_points_y)
 
     def gen_target_sample(self, mu_x_list=None, mu_y_list=None,
                           sigma_list=None,
@@ -44,7 +52,7 @@ class TargetMultiGaussian2D(TargetAbstract):
                           sample_size=None,
                           num_points_x=50,
                           num_points_y=50,
-                          num_bins=50,
+                          num_bins=None,
                           xmin=None, xmax=None,
                           ymin=None, ymax=None):
 
@@ -74,6 +82,10 @@ class TargetMultiGaussian2D(TargetAbstract):
 
         ymax = self.ymax if ymax is None else ymax
         self.ymax = ymax
+        
+        if num_bins is not None:
+            num_points_x = num_bins
+            num_points_y = num_bins
 
         x_arr = np.linspace(self.xmin, self.xmax, num_points_x)
         y_arr = np.linspace(self.ymin, self.ymax, num_points_y)
@@ -100,12 +112,20 @@ class TargetMultiGaussian2D(TargetAbstract):
         prob_arr_flat = z_arr.flatten()
         idx_list = [idx for idx, _ in np.ndenumerate(x_mesh)]
         idx_arr = np.array(idx_list)
-
-        idx_samples = np.random.choice(len(idx_arr), self.sample_size, p=prob_arr_flat)
-
-        x_samples = [x_arr[idx_arr[idx][0]] for idx in idx_samples]
-        y_samples = [y_arr[idx_arr[idx][1]] for idx in idx_samples]
-
-        sample = list(zip(x_samples, y_samples))
         
-        self.sample = torch.from_numpy(np.array([list(s) for s in sample]))
+        self.target_hist_idx_prob_arr = prob_arr_flat
+        self.target_hist_idx_arr = idx_arr
+        
+        self.gen_target_sample_to_file()
+        self.mmap_target_sample()
+        
+        ### Code below moved to 
+        ### TargetAbstract.gen_target_sample_file
+        # idx_samples = np.random.choice(len(idx_arr), self.sample_size, p=prob_arr_flat)
+
+        # x_samples = [x_arr[idx_arr[idx][0]] for idx in idx_samples]
+        # y_samples = [y_arr[idx_arr[idx][1]] for idx in idx_samples]
+
+        # sample = list(zip(x_samples, y_samples))
+        
+        # self.sample = torch.from_numpy(np.array([list(s) for s in sample]))
