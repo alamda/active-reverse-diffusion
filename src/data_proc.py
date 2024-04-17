@@ -28,10 +28,23 @@ class DataProc:
             if num_hist_bins_y is not None \
             else int(self.num_hist_bins[1])
             
+        self.num_hist_bins = [None, None]
+        
         if num_hist_bins_x is not None:
-            self.num_hist_bins = (num_hist_bins_x, self.num_hist_bins[1])
+            self.num_hist_bins[0] = num_hist_bins_x
+        else:
+            if isinstance(num_hist_bins, tuple):
+                self.num_hist_bins[0] = num_hist_bins[0]
+            elif isinstance(num_hist_bins, int):
+                self.num_hist_bins[0] = num_hist_bins
+        
         if num_hist_bins_y is not None:
-            self.num_hist_bins = (self.num_hist_bins[0], num_hist_bins_y)
+            self.num_hist_bins[1] = num_hist_bins_y
+        else:
+            if isinstance(num_hist_bins, tuple):
+                self.num_hist_bins[1] = num_hist_bins[1]
+            elif isinstance(num_hist_bins, int):
+                self.num_hist_bins[1] = num_hist_bins
             
         self.t_list = None
         self.diff_list = None
