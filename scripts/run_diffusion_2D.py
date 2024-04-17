@@ -110,20 +110,16 @@ if __name__ == "__main__":
         
         # myDiffNum.num_diffusion_steps=1
 
-        if os.path.isfile(f"{ofile_base}.pkl"):
-            with open(f"{ofile_base}.pkl", 'rb') as f:
-                myDiffNum = pickle.load(f)
-        else:
-            myDiffNum.train_diffusion_passive(iterations=num_passive_iterations)
-            myDiffNum.sample_from_diffusion_passive()
-            myDiffNum.calculate_passive_diff_list()
-            
-            myDiffNum.train_diffusion_active(iterations=num_active_iterations)
-            myDiffNum.sample_from_diffusion_active()
-            myDiffNum.calculate_active_diff_list()
-            
-            with open(f"{ofile_base}.pkl", 'wb') as f:
-                pickle.dump(myDiffNum, f)
+        myDiffNum.train_diffusion_passive(iterations=num_passive_iterations)
+        myDiffNum.sample_from_diffusion_passive()
+        myDiffNum.calculate_passive_diff_list()
+        
+        myDiffNum.train_diffusion_active(iterations=num_active_iterations)
+        myDiffNum.sample_from_diffusion_active()
+        myDiffNum.calculate_active_diff_list()
+        
+        with open(f"{ofile_base}.pkl", 'wb') as f:
+            pickle.dump(myDiffNum, f)
               
         rev_pass_first = myDiffNum.passive_reverse_samples[0]
         
@@ -217,9 +213,6 @@ if __name__ == "__main__":
         plt.close(fig)
 
     if True:
-        with open("data.pkl", 'rb') as f:
-            myDiffNum = pickle.load(f)
-        
         fig, ax = plt.subplots()
         
         t_list_passive = np.arange(
