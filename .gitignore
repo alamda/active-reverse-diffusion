@@ -8,6 +8,8 @@ runs/
 *.npy
 
 scripts/diffusion.conf
+scripts/*.bin
+scripts/*.html
 
 passive_diff_list.txt
 active_diff_list.txt
