@@ -10,10 +10,9 @@ import copy
 
 import multiprocess
 from multiprocess import Pool
-
 import mmap
-
 import gc
+import sys
 
 class DiffusionNumeric(Diffusion):
     def __init__(self, ofile_base="", 
@@ -129,6 +128,8 @@ class DiffusionNumeric(Diffusion):
 
             t_idx += 1
             
+            del score_model
+            del optim
             del dataset
             del dataloader
             gc.collect()
@@ -334,6 +335,10 @@ class DiffusionNumeric(Diffusion):
 
             t_idx += 1
             
+            del score_model_x
+            del score_model_eta
+            del optim_x
+            del optim_eta
             del dataset
             del dataloader
             gc.collect()

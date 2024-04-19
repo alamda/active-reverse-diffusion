@@ -19,7 +19,7 @@ matplotlib.use('Agg')
 def main():
     ofile_base = "data"
 
-    sample_size = 1000
+    sample_size = 10000
 
     passive_noise_T = 1.0
 
@@ -37,13 +37,13 @@ def main():
     ymin = -1
     ymax = 1
 
-    num_diffusion_steps = 10
+    num_diffusion_steps = 100
     dt = 0.005
     
     num_hist_bins = 10
     
-    num_passive_iterations=1
-    num_active_iterations=1
+    num_passive_iterations=10
+    num_active_iterations=50
 
     myPassiveNoise = NoisePassive(T=passive_noise_T,
                                   dim=sample_size)
