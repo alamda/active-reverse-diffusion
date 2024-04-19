@@ -6,7 +6,7 @@ import gc
 import pickle
 
 class DataHandler:
-    def __init__(self, name="handler_generic",
+    def __init__(self, name="data_handler",
                  fname=None):
         self.name = name
         
@@ -28,10 +28,10 @@ class DataHandler:
         
         if (not os.path.isfile(self.fname)) or (overwrite is True):
             with open(self.fname, 'wb'):
-                os.utime(self.fname, None)
-
+                os.utime(self.fname, None)                
+                
 class DiffusionSampleHandler(DataHandler):
-    def __init__(self, name="data_handler_generic", 
+    def __init__(self, name="diffusion_sample_handler", 
                  fname=None,
                  sample_size=None,
                  sample_dim=None):
@@ -57,6 +57,9 @@ class DiffusionSampleHandler(DataHandler):
                 tensor = torch.DoubleTensor(tensor)
             with open(self.fname, "ab") as f:
                 f.write(tensor.detach().numpy().tobytes())
+                
+            del tensor
+        gc.collect()
     
     def mmap_tensor_from_file(self, fname=None, shape=None):
         self.set_fname(fname=fname)
@@ -75,7 +78,12 @@ class DiffusionSampleHandler(DataHandler):
                     self.mmap_tensor = torch.from_numpy(
                         np.reshape(self.mmap_arr, shape))
                     
-                    self.mmap_tensor = [x for x in self.mmap_tensor]
+                    if self.mmap_tensor.shape[0] > 1:
+                        self.mmap_tensor = [x for x in self.mmap_tensor]
+                    else:
+                        self.mmap_tensor = \
+                            torch.reshape(self.mmap_tensor, 
+                                          (self.sample_size, self.sample_dim))
                     
                     return self.mmap_tensor
                 else:
@@ -94,7 +102,7 @@ class DiffusionSampleHandler(DataHandler):
             self.mmap = None
             
 class ModelHandler(DataHandler):
-    def __init__(self, name="model_handler_generic",
+    def __init__(self, name="model_handler",
                  fname=None):
         
         super().__init__(name=name, fname=fname)

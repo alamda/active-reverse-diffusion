@@ -34,15 +34,9 @@ class Diffusion(AbstractBaseClass):
                  overwrite=True):
         
         self.target = target
-        
-        # Number of samples generated - inferred from target sample size
-        self.sample_size = int(self.target.sample.shape[0])
-        
-        if len(self.target.sample.shape) == 1:
-            self.sample_dim = 1
-        else:
-            # 1D vs 2D - inferred from target dimension
-            self.sample_dim = int(self.target.sample.shape[1])
+
+        self.sample_size = self.target.sample_size
+        self.sample_dim = self.target.sample_dim
         
         self.ofile_base = str(ofile_base)
         
@@ -104,10 +98,12 @@ class Diffusion(AbstractBaseClass):
         self.num_active_reverse_diffusion_steps = None
 
     def forward_diffusion_passive(self):
+        self.target.mmap_sample()
+        
         self.forward_passive_data_h.write_tensor_to_file(tensor=self.target.sample)
         
         sample_t = self.target.sample.detach()
-        
+
         bar = tqdm(range(0, self.num_diffusion_steps))
         
         bar.set_description("Forward diffusion - passive")
@@ -115,22 +111,31 @@ class Diffusion(AbstractBaseClass):
         for t_idx, e in enumerate(bar):
             sample_t = sample_t - self.dt*sample_t + \
                 np.sqrt(2*self.passive_noise.temperature*self.dt) * \
-                torch.normal(torch.zeros_like(self.target.sample),
-                             torch.ones_like(self.target.sample))
+                torch.normal(torch.zeros_like(sample_t),
+                             torch.ones_like(sample_t))
             
             self.forward_passive_data_h.write_tensor_to_file(tensor=sample_t)
 
+        del sample_t
+        del self.target.sample
+        gc.collect()
+
+        self.target.close_mmap()
+ 
     @abstractmethod
     def sample_from_diffusion_passive(self):
         """Reverse diffusion process with passive noise"""
 
     def forward_diffusion_active(self):
+        
+        self.target.mmap_sample()
 
         eta = torch.normal(torch.zeros_like(self.target.sample),
                            np.sqrt(self.active_noise.temperature.active /
                                    self.active_noise.correlation_time)
                            * torch.ones_like(self.target.sample)
                            )
+        
         self.forward_x_active_data_h.write_tensor_to_file(tensor=self.target.sample)
         self.forward_eta_active_data_h.write_tensor_to_file(tensor=eta)
         
@@ -143,8 +148,8 @@ class Diffusion(AbstractBaseClass):
         for t_idx, e in enumerate(bar):
             sample_t = sample_t - self.dt*sample_t + self.dt*eta + \
                 np.sqrt(2*self.active_noise.temperature.passive*self.dt) * \
-                torch.normal(torch.zeros_like(self.target.sample),
-                             torch.ones_like(self.target.sample))
+                torch.normal(torch.zeros_like(sample_t),
+                             torch.ones_like(sample_t))
 
             eta = eta - (1/self.active_noise.correlation_time)*self.dt*eta + \
                 (1/self.active_noise.correlation_time) * \
@@ -154,6 +159,13 @@ class Diffusion(AbstractBaseClass):
             self.forward_x_active_data_h.write_tensor_to_file(tensor=sample_t)
             self.forward_eta_active_data_h.write_tensor_to_file(tensor=eta)
  
+        del sample_t
+        del eta
+        del self.target.sample
+        gc.collect()
+                    
+        self.target.close_mmap()
+          
     @abstractmethod
     def sample_from_diffusion_active(self):
         """Reverse diffusion process with active and passive noise"""
@@ -174,19 +186,21 @@ class Diffusion(AbstractBaseClass):
                 sample_data_h = getattr(self, sample_list_data_h_attr_name)
                 sample_list = sample_data_h.mmap_tensor_from_file()
                 
+                self.target.mmap_sample()
+                
                 if multiproc == True:
 
                     num_cpus = multiprocess.cpu_count()
                     num_procs = num_cpus - 4
 
-                    with Pool() as pool:
+                    with Pool() as pool:                     
                         diff_list = \
                             self.data_proc.calc_diff_vs_t(target_sample=self.target.sample,
                                                           diffusion_sample_list=sample_list,
                                                           multiproc=True,
                                                           pool=pool)
                         
-                        setattr(self, diff_list_attr_name, diff_list)
+                        setattr(self, diff_list_attr_name, diff_list)                                              
                 else:
                     diff_list = self.data_proc.calc_diff_vs_t(self.target.sample,
                                                               diffusion_sample_list=sample_list,
@@ -195,10 +209,12 @@ class Diffusion(AbstractBaseClass):
                     
                     setattr(self, diff_list_attr_name, diff_list)
                 
+                del self.target.sample
                 del sample_list
                 gc.collect()
                 
                 sample_data_h.close_mmap()
+                self.target.close_mmap()
 
         else:
             print("Invalied diffusion type (use either 'passive' or 'active')")

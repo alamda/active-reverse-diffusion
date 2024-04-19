@@ -117,7 +117,6 @@ class TargetMultiGaussian2D(TargetAbstract):
         self.target_hist_idx_arr = idx_arr
         
         self.gen_target_sample_to_file()
-        self.mmap_target_sample()
         
         ### Code below moved to 
         ### TargetAbstract.gen_target_sample_file
