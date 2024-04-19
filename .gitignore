@@ -14,6 +14,8 @@ scripts/*.html
 passive_diff_list.txt
 active_diff_list.txt
 
+test_runs/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -3,26 +3,16 @@ import torch
 import mmap
 import os
 import gc
+import pickle
 
 class DataHandler:
-    def __init__(self, name="data_handler_generic", 
-                 fname=None,
-                 sample_size=None,
-                 sample_dim=None):
+    def __init__(self, name="handler_generic",
+                 fname=None):
         self.name = name
         
         self.fname = None
         self.set_fname(fname=fname)
-        
-        self.sample_size = sample_size
-        self.sample_dim = sample_dim
-        
-        self.mmap = None
-        self.mmap_arr = None
-        self.mmap_tensor = None 
-        # ^ Actually a list of tensors in the case of 
-        # forward/reverse diffusion trajectories
-    
+
     def set_fname(self, fname=None):
         try:
             if fname is not None:
@@ -39,6 +29,24 @@ class DataHandler:
         if (not os.path.isfile(self.fname)) or (overwrite is True):
             with open(self.fname, 'wb'):
                 os.utime(self.fname, None)
+
+class DiffusionSampleHandler(DataHandler):
+    def __init__(self, name="data_handler_generic", 
+                 fname=None,
+                 sample_size=None,
+                 sample_dim=None):
+        
+        super().__init__(name=name, fname=fname)
+
+        self.sample_size = sample_size
+        self.sample_dim = sample_dim
+        
+                
+        self.mmap = None
+        self.mmap_arr = None
+        self.mmap_tensor = None 
+        # ^ Actually a list of tensors in the case of 
+        # forward/reverse diffusion trajectories
                 
     def write_tensor_to_file(self, tensor=None, fname=None):
         if (not os.path.isfile(self.fname)) or (fname is not None) :
@@ -48,7 +56,7 @@ class DataHandler:
             if isinstance(tensor, list):
                 tensor = torch.DoubleTensor(tensor)
             with open(self.fname, "ab") as f:
-                f.write(tensor.numpy().tobytes())
+                f.write(tensor.detach().numpy().tobytes())
     
     def mmap_tensor_from_file(self, fname=None, shape=None):
         self.set_fname(fname=fname)
@@ -56,7 +64,7 @@ class DataHandler:
         with open(self.fname, "r+b") as f:  
             self.mmap = mmap.mmap(f.fileno(), 0)
             
-            self.mmap_arr = np.frombuffer(mm, dtype=np.double)
+            self.mmap_arr = np.frombuffer(self.mmap, dtype=np.double)
             
             try:
                 if (shape is None) and \
@@ -75,8 +83,40 @@ class DataHandler:
             except TypeError:
                 print("Need to provide shape for tensor \
                        (num diff steps, sample size, sample dim)")
-
+        
     def close_mmap(self):
         if self.mmap is not None:
+            del self.mmap_arr
+            del self.mmap_tensor
+            gc.collect()
+            
             self.mmap.close()
             self.mmap = None
+            
+class ModelHandler(DataHandler):
+    def __init__(self, name="model_handler_generic",
+                 fname=None):
+        
+        super().__init__(name=name, fname=fname)
+        
+        self.models = []
+        
+    def clear_models(self):
+        self.models = []
+        
+    def write_model_to_file(self, model=None, fname=None):
+        if (not os.path.isfile(self.fname)) or (fname is not None) :
+            self.create_new_file(fname=fname)
+            
+        if None not in (model):
+            with open(self.fname, "wb") as f:
+                self.models.append(model)
+                pickle.dump(self.models, f)
+                
+    def load_models(self, fname=None):
+        self.set_fname(fname=fname)
+        
+        with open(self.fname, "rb") as f:
+            self.models = pickle.load(f)
+            
+            return self.models

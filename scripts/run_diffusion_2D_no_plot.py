@@ -19,7 +19,7 @@ matplotlib.use('Agg')
 def main():
     ofile_base = "data"
 
-    sample_size = 100000
+    sample_size = 1000
 
     passive_noise_T = 1.0
 
@@ -75,54 +75,21 @@ def main():
                                  sample_size=sample_size,
                                  data_proc=myDataProc)
 
-     
-    with open("target_sample.pkl", "wb") as f:
-        pickle.dump(myDiffNum.target.sample, f)
-
     myDiffNum.forward_diffusion_passive()
     myDiffNum.forward_diffusion_active()
     
-    with open("passive_forward_time_arr.pkl", "wb") as f:
-        pickle.dump(myDiffNum.passive_forward_time_arr, f)
-    with open("active_forward_time_arr.pkl", "wb") as f:
-        pickle.dump(myDiffNum.active_forward_time_arr, f)
-
     myDiffNum.train_diffusion_passive(iterations=num_passive_iterations)
-    
-    with open("passive_models.pkl", "wb") as f:
-        pickle.dump(myDiffNum.passive_models, f)
-    
+
     myDiffNum.sample_from_diffusion_passive()
     myDiffNum.calculate_passive_diff_list()
     
-    with open("passive_diff_list.pkl", "wb") as f:
-        pickle.dump(myDiffNum.passive_diff_list, f)
-    
     myDiffNum.train_diffusion_active(iterations=num_active_iterations)
-    
-    with open("active_models_x.pkl", "wb") as f:
-        pickle.dump(myDiffNum.active_models_x, f)
-    with open("active_models_eta.pkl", "wb") as f:
-        pickle.dump(myDiffNum.active_models_eta, f)
     
     myDiffNum.sample_from_diffusion_active()
     myDiffNum.calculate_active_diff_list()
-
-    with open("active_diff_list.pkl", "wb") as f:
-        pickle.dump(myDiffNum.active_diff_list, f)
-        
-    myDiffNum.target.sample = None
-    myDiffNum.passive_forward_samples = None
-    myDiffNum.passive_reverse_samples = None
-    
-    myDiffNum.active_forward_samples_x = None
-    myDiffNum.active_forward_samples_eta = None
-    myDiffNum.active_reverse_samples_x = None
-    myDiffNum.active_reverse_samples_eta = None
     
     with open("data.pkl", "wb") as f:
         pickle.dump(myDiffNum, f)
-    
     
 if __name__ == "__main__":
     main()

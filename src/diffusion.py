@@ -1,6 +1,6 @@
 from abc import ABC as AbstractBaseClass
 from abc import abstractmethod
-from data_handler import DataHandler
+from data_handler import DiffusionSampleHandler
 
 import multiprocess
 from multiprocess import Pool
@@ -12,6 +12,7 @@ import mmap
 from tqdm.auto import tqdm
 
 import functools
+import gc
 
 class Diffusion(AbstractBaseClass):
     def __init__(self, ofile_base="", 
@@ -45,7 +46,7 @@ class Diffusion(AbstractBaseClass):
         
         self.ofile_base = str(ofile_base)
         
-        create_data_h = functools.partial(DataHandler, 
+        create_data_h = functools.partial(DiffusionSampleHandler, 
                                           sample_size=self.sample_size,
                                           sample_dim=self.sample_dim)
         
@@ -171,8 +172,7 @@ class Diffusion(AbstractBaseClass):
         if (sample_list_data_h_attr_name is not None) and (diff_list_attr_name is not None):
             if self.data_proc is not None:
                 sample_data_h = getattr(self, sample_list_data_h_attr_name)
-                sample_data_h.mmap_tensor_from_file()
-                sample_list = sample_data_h.mmap_tensor
+                sample_list = sample_data_h.mmap_tensor_from_file()
                 
                 if multiproc == True:
 
@@ -194,6 +194,9 @@ class Diffusion(AbstractBaseClass):
                                                               pool=None)
                     
                     setattr(self, diff_list_attr_name, diff_list)
+                
+                del sample_list
+                gc.collect()
                 
                 sample_data_h.close_mmap()
 
