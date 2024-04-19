@@ -10,12 +10,12 @@ from data_proc import DataProc
 from target_multi_gaussian_2D import TargetMultiGaussian2D
 from noise import NoiseActive, NoisePassive
 from diffusion_numeric import DiffusionNumeric
-from memory_profiler import profile
+#from memory_profiler import profile
 
 import matplotlib
 matplotlib.use('Agg')
 
-@profile
+#@profile
 def main():
     ofile_base = "data"
 
@@ -81,12 +81,12 @@ def main():
     myDiffNum.train_diffusion_passive(iterations=num_passive_iterations)
 
     myDiffNum.sample_from_diffusion_passive()
-    myDiffNum.calculate_passive_diff_list()
+    #myDiffNum.calculate_passive_diff_list()
     
     myDiffNum.train_diffusion_active(iterations=num_active_iterations)
     
     myDiffNum.sample_from_diffusion_active()
-    myDiffNum.calculate_active_diff_list()
+    #myDiffNum.calculate_active_diff_list()
     
     with open("data.pkl", "wb") as f:
         pickle.dump(myDiffNum, f)
