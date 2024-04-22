@@ -63,8 +63,8 @@ class DiffusionNumeric(Diffusion):
         self.active_loss_history_eta = None
 
     def compute_loss_passive(self, t_idx, forward_samples, forward_samples_zero, score_model):
-        sample_t = forward_samples.reshape(self.nn_batch_size, self.sample_dim).type(torch.DoubleTensor)
-        sample_0 = forward_samples_zero.reshape(self.nn_batch_size, self.sample_dim).type(torch.DoubleTensor)
+        sample_t = forward_samples.reshape(self.sample_size, self.sample_dim).type(torch.DoubleTensor)
+        sample_0 = forward_samples_zero.reshape(self.sample_size, self.sample_dim).type(torch.DoubleTensor)
 
         l = -(sample_t - sample_0 * np.exp(-t_idx*self.dt)) / \
              (self.passive_noise.temperature * (1-np.exp(-2*t_idx*self.dt)))
@@ -97,24 +97,17 @@ class DiffusionNumeric(Diffusion):
 
             optim = torch.optim.AdamW(itertools.chain(
                 score_model.parameters()), lr=1e-2, weight_decay=1e-8,)
-            
-            dataset = TensorDataset(forward_samples[t_idx], forward_samples[0])
-            dataloader = DataLoader(dataset, batch_size=self.nn_batch_size, shuffle=True)
 
             for _ in range(iterations):
-                for id_batch, (sample_batch, sample_zero_batch) in enumerate(dataloader):
+                
+                t = t_idx 
+                
+                loss, l, scr = self.compute_loss_passive(t_idx, forward_samples[t_idx], forward_samples[0], score_model)
+                                
+                optim.zero_grad()
 
-                    sample_batch = sample_batch.reshape(self.nn_batch_size, self.sample_dim).type(torch.DoubleTensor)
-                    sample_zero_batch = sample_zero_batch.reshape(self.nn_batch_size, self.sample_dim).type(torch.DoubleTensor)
-                    
-                    t = t_idx 
-                    
-                    loss, l, scr = self.compute_loss_passive(t_idx, sample_batch, sample_zero_batch, score_model)
-                                 
-                    optim.zero_grad()
-
-                    loss.backward()
-                    optim.step()
+                loss.backward()
+                optim.step()
 
             bar.set_description(f'Passive training - Time: {t_idx} Loss: {loss.item():.4f}')
 
@@ -130,8 +123,6 @@ class DiffusionNumeric(Diffusion):
             
             del score_model
             del optim
-            del dataset
-            del dataloader
             gc.collect()
 
         self.passive_forward_time_arr = np.array(time_step_list)
@@ -207,10 +198,10 @@ class DiffusionNumeric(Diffusion):
         M11, M12, M22 = self.M_11_12_22(t_idx)
 
         det = M11*M22 - M12*M12
-        x0 = forward_samples_x_zero.reshape(self.nn_batch_size, self.sample_dim).type(torch.DoubleTensor)
-        eta0 = forward_samples_eta_zero.reshape(self.nn_batch_size, self.sample_dim).type(torch.DoubleTensor)
-        x = forward_samples_x.reshape(self.nn_batch_size, self.sample_dim).type(torch.DoubleTensor) #[t_idx].type(torch.DoubleTensor)
-        eta = forward_samples_eta.reshape(self.nn_batch_size, self.sample_dim).type(torch.DoubleTensor) #[t_idx].type(torch.DoubleTensor)
+        x0 = forward_samples_x_zero.reshape(self.sample_size, self.sample_dim).type(torch.DoubleTensor)
+        eta0 = forward_samples_eta_zero.reshape(self.sample_size, self.sample_dim).type(torch.DoubleTensor)
+        x = forward_samples_x.reshape(self.sample_size, self.sample_dim).type(torch.DoubleTensor) #[t_idx].type(torch.DoubleTensor)
+        eta = forward_samples_eta.reshape(self.sample_size, self.sample_dim).type(torch.DoubleTensor) #[t_idx].type(torch.DoubleTensor)
 
         Fx = (1/det)*(-M22*(x - a*x0 - b*eta0) + M12*(eta - c*eta0))
         Feta = (1/det)*(-M11*(eta - c*eta0) + M12*(x - a*x0 - b*eta0))
@@ -285,40 +276,27 @@ class DiffusionNumeric(Diffusion):
             optim_eta = torch.optim.AdamW(itertools.chain(
                 score_model_eta.parameters()), lr=1e-2, weight_decay=1e-8,)
 
-            dataset = TensorDataset(forward_samples_x[t_idx], forward_samples_x[0],
-                                    forward_samples_eta[t_idx], forward_samples_eta[0])
-            dataloader = DataLoader(dataset, batch_size=self.nn_batch_size, shuffle=True)
-
             for _ in range(iterations):
-                for id_batch, (sample_x_batch, sample_x_zero_batch, \
-                               sample_eta_batch, sample_eta_zero_batch) \
-                                   in enumerate(dataloader):
                     
-                    sample_x_batch = sample_x_batch.reshape(self.nn_batch_size, self.sample_dim).type(torch.DoubleTensor)
-                    sample_x_zero_batch = sample_x_zero_batch.reshape(self.nn_batch_size, self.sample_dim).type(torch.DoubleTensor)
-                    
-                    sample_eta_batch = sample_eta_batch.reshape(self.nn_batch_size, self.sample_dim).type(torch.DoubleTensor)
-                    sample_eta_zero_batch = sample_eta_zero_batch.reshape(self.nn_batch_size, self.sample_dim).type(torch.DoubleTensor)
-                    
-                    t = t_idx 
-                    
-                    optim_x.zero_grad()
-                    optim_eta.zero_grad()
+                t = t_idx 
+                
+                optim_x.zero_grad()
+                optim_eta.zero_grad()
 
-                    loss_x, loss_eta, loss_Fx, loss_Feta, loss_scr_x, loss_scr_eta = \
-                        self.compute_loss_active(t_idx, 
-                                                 sample_x_batch,
-                                                 sample_x_zero_batch,
-                                                sample_eta_batch,
-                                                sample_eta_zero_batch,
-                                                score_model_x,
-                                                score_model_eta)
+                loss_x, loss_eta, loss_Fx, loss_Feta, loss_scr_x, loss_scr_eta = \
+                    self.compute_loss_active(t_idx, 
+                                                forward_samples_x[t_idx],
+                                                forward_samples_x[0],
+                                                forward_samples_eta[t_idx],
+                                                forward_samples_eta[0],
+                                            score_model_x,
+                                            score_model_eta)
 
-                    loss_x.backward()
-                    loss_eta.backward()
+                loss_x.backward()
+                loss_eta.backward()
 
-                    optim_x.step()
-                    optim_eta.step()
+                optim_x.step()
+                optim_eta.step()
 
             bar.set_description(
                 f'Active training - Time: {t_idx} Loss: {loss_x.item():.4f} Fx: {loss_Fx.item():.4f} scr_x: {loss_scr_x.item():.4f}')
@@ -339,8 +317,6 @@ class DiffusionNumeric(Diffusion):
             del score_model_eta
             del optim_x
             del optim_eta
-            del dataset
-            del dataloader
             gc.collect()
 
         self.active_forward_time_arr = np.array(time_step_list)
