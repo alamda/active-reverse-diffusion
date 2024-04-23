@@ -141,7 +141,8 @@ class DiffusionNumeric(Diffusion):
             all_models = self.passive_models_data_h.load_models()
 
         sample_t = self.passive_noise.temperature * \
-            torch.randn(self.sample_size, self.sample_dim).type(torch.DoubleTensor)
+            torch.normal(torch.zeros(self.sample_size, self.sample_dim),
+                         torch.ones(self.sample_size, self.sample_dim)).type(torch.DoubleTensor)
 
         self.reverse_passive_data_h.write_tensor_to_file(tensor=sample_t)
 
@@ -174,7 +175,8 @@ class DiffusionNumeric(Diffusion):
             sample_t = sample_t + sample_t*self.dt + \
                 2*self.passive_noise.temperature*F*self.dt + \
                 np.sqrt(2*self.passive_noise.temperature*self.dt) * \
-                torch.randn(self.sample_size, self.sample_dim)
+                torch.normal(torch.zeros_like(sample_t),
+                             torch.ones_like(sample_t))
 
             self.reverse_passive_data_h.write_tensor_to_file(tensor=sample_t)
 
@@ -344,11 +346,13 @@ class DiffusionNumeric(Diffusion):
                     (self.active_noise.temperature.active /
                      (self.k**2 * self.active_noise.correlation_time + self.k)
                      )
-                    ) * torch.randn([self.sample_size, self.sample_dim]).type(torch.DoubleTensor)
+                    ) * torch.normal(torch.zeros(self.sample_size, self.sample_dim),
+                             torch.ones(self.sample_size, self.sample_dim)).type(torch.DoubleTensor)
 
         eta = np.sqrt(self.active_noise.temperature.active /
                       self.active_noise.correlation_time) * \
-            torch.randn([self.sample_size, self.sample_dim]).type(torch.DoubleTensor)
+           torch.normal(torch.zeros(self.sample_size, self.sample_dim),
+                             torch.ones(self.sample_size, self.sample_dim)).type(torch.DoubleTensor)
 
         self.reverse_x_active_data_h.write_tensor_to_file(tensor=x)
         self.reverse_eta_active_data_h.write_tensor_to_file(tensor=eta)
@@ -374,14 +378,16 @@ class DiffusionNumeric(Diffusion):
             x = x + self.dt*(x-eta) + \
                 2*self.active_noise.temperature.passive*Fx*self.dt + \
                 np.sqrt(2*self.active_noise.temperature.passive*self.dt) * \
-                torch.randn(x.shape)
+                torch.normal(torch.zeros_like(x),
+                             torch.ones_like(x))
 
             eta = eta + self.dt*eta/self.active_noise.correlation_time + \
                 (2*self.active_noise.temperature.active /
                     (self.active_noise.correlation_time**2)) * Feta*self.dt + \
                 (1/self.active_noise.correlation_time) * \
                 np.sqrt(2 * self.active_noise.temperature.active * self.dt) * \
-                torch.randn(eta.shape)
+                torch.normal(torch.zeros_like(eta),
+                             torch.ones_like(eta))
 
             self.reverse_x_active_data_h.write_tensor_to_file(tensor=x)
             self.reverse_eta_active_data_h.write_tensor_to_file(tensor=eta)

@@ -23,22 +23,44 @@ def load_file(fname):
     
     return var
 
+def plot_hist(sample_tensor):
+    fig = figure.Figure()
+    ax = fig.subplots(1)
+    
+    hist, _, _ = np.histogram2d(sample_tensor[:,0], sample_tensor[:,1], density=True)
+    
+    im = ax.imshow(hist)
+    
+    fig.savefig("hist.png")
+
 def main():
     
     myDiffNum = load_file("data.pkl")
     
-    target_sample = load_file("target_sample.pkl")
+    target_sample = myDiffNum.target.target_sample_data_h.mmap_tensor_from_file(fname="target.npy")
+    
+    forward_passive = myDiffNum.forward_passive_data_h.mmap_tensor_from_file("forward_passive.npy")
+    
+    forward_x_active = myDiffNum.forward_x_active_data_h.mmap_tensor_from_file("forward_x_active.npy")
+    forward_eta_active = myDiffNum.forward_eta_active_data_h.mmap_tensor_from_file("forward_eta_active.npy")
+    
+    reverse_passive = myDiffNum.reverse_passive_data_h.mmap_tensor_from_file("reverse_passive.npy")
+    
+    reverse_x_active = myDiffNum.reverse_x_active_data_h.mmap_tensor_from_file("reverse_x_active.npy")
+    reverse_eta_active = myDiffNum.reverse_eta_active_data_h.mmap_tensor_from_file("reverse_eta_active.npy")
 
-    passive_models = load_file("passive_models.pkl")
 
-    active_models_x = load_file("active_models_x.pkl")
-    active_models_eta = load_file("active_models_eta.pkl")
+    passive_models = load_file("passive_models.pt")
+
+    active_models_x = load_file("active_models_x.pt")
+    active_models_eta = load_file("active_models_eta.pt")
     
     myDiffNum.target.sample = target_sample
     myDiffNum.passive_models = passive_models
     myDiffNum.active_models_x = active_models_x
     myDiffNum.active_models_eta = active_models_eta
     
+
     time_list = [0.010, 0.020, 0.030, 0.040]
     
     
