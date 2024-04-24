@@ -10,7 +10,6 @@ from data_proc import DataProc
 from target_multi_gaussian_2D import TargetMultiGaussian2D
 from noise import NoiseActive, NoisePassive
 from diffusion_numeric import DiffusionNumeric
-from memory_profiler import profile
 
 import matplotlib
 matplotlib.use('Agg')
@@ -48,7 +47,6 @@ def main():
     
     reverse_x_active = myDiffNum.reverse_x_active_data_h.mmap_tensor_from_file("reverse_x_active.npy")
     reverse_eta_active = myDiffNum.reverse_eta_active_data_h.mmap_tensor_from_file("reverse_eta_active.npy")
-
 
     passive_models = load_file("passive_models.pt")
 
