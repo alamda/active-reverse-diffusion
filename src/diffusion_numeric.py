@@ -144,6 +144,7 @@ class DiffusionNumeric(Diffusion):
             torch.normal(torch.zeros(self.sample_size, self.sample_dim),
                          torch.ones(self.sample_size, self.sample_dim)).type(torch.DoubleTensor)
 
+        self.reverse_passive_data_h.create_new_file(fname=self.reverse_passive_data_h.fname)
         self.reverse_passive_data_h.write_tensor_to_file(tensor=sample_t)
 
         time_step_list = []
@@ -353,8 +354,11 @@ class DiffusionNumeric(Diffusion):
                       self.active_noise.correlation_time) * \
            torch.normal(torch.zeros(self.sample_size, self.sample_dim),
                              torch.ones(self.sample_size, self.sample_dim)).type(torch.DoubleTensor)
-
+        
+        self.reverse_x_active_data_h.create_new_file(fname=self.reverse_x_active_data_h.fname)
         self.reverse_x_active_data_h.write_tensor_to_file(tensor=x)
+
+        self.reverse_eta_active_data_h.create_new_file(fname=self.reverse_eta_active_data_h.fname)
         self.reverse_eta_active_data_h.write_tensor_to_file(tensor=eta)
             
         time_step_list = []
