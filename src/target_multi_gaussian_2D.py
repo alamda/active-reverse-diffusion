@@ -47,7 +47,7 @@ class TargetMultiGaussian2D(TargetAbstract):
         if not os.path.isfile(self.target_sample_fname):
             if all(val is not None for val in param_list):
                 if (num_bins is not None):
-                    self.gen_target_sample(num_bins=num_bins)
+                    self.gen_target_sample()
                 elif (num_points_x is not None) and (num_points_y is not None):
                     self.gen_target_sample(num_points_x=num_points_x, num_points_y=num_points_y)
                 else:
