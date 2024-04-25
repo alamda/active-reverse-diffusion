@@ -4,6 +4,8 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 
+import os
+
 
 class TargetMultiGaussian2D(TargetAbstract):
     def __init__(self, name="multi_gauss_2d",
@@ -16,7 +18,7 @@ class TargetMultiGaussian2D(TargetAbstract):
                  num_bins=None,
                  num_points_x=None,
                  num_points_y=None,
-                 generate=True):
+                 target_sample_fname="target.npy"):
 
         super().__init__(name=name, 
                          sample_size=sample_size,
@@ -25,7 +27,7 @@ class TargetMultiGaussian2D(TargetAbstract):
                          xmax=xmax,
                          ymin=ymin,
                          ymax=ymax,
-                         generate=generate)
+                         target_sample_fname=target_sample_fname)
 
         self.ymin = ymin
         self.ymax = ymax
@@ -41,11 +43,16 @@ class TargetMultiGaussian2D(TargetAbstract):
                       self.pi_list, self.sample_size]
 
 
-        if all(val is not None for val in param_list) and generate:
-            if (num_bins is not None):
-                self.gen_target_sample(num_bins=num_bins)
-            elif (num_points_x is not None) and (num_points_y is not None):
-                self.gen_target_sample(num_points_x=num_points_x, num_points_y=num_points_y)
+        if not os.path.isfile(self.target_sample_fname):
+            if all(val is not None for val in param_list):
+                if (num_bins is not None):
+                    self.gen_target_sample(num_bins=num_bins)
+                elif (num_points_x is not None) and (num_points_y is not None):
+                    self.gen_target_sample(num_points_x=num_points_x, num_points_y=num_points_y)
+                else:
+                    print("Target not generated, missing parameters (num bins or num_points_x/y)")
+        else:
+            print("Target sample file found, loading from file")
 
     def gen_target_sample(self, mu_x_list=None, mu_y_list=None,
                           sigma_list=None,

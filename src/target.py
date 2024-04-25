@@ -22,8 +22,7 @@ class TargetAbstract(AbstractBaseClass):
                  xmax=None,
                  ymin=None,
                  ymax=None, 
-                 target_sample_fname="target.npy",
-                 generate=True):
+                 target_sample_fname="target.npy"):
         
         self.name = name
         self.sample_size = int(sample_size)
