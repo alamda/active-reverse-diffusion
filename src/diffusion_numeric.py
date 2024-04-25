@@ -54,7 +54,7 @@ class DiffusionNumeric(Diffusion):
         self.models_active_x_data_h = ModelHandler(fname=self.models_active_x_fname)
         
         self.models_active_eta_fname = models_active_eta_fname
-        self.models_Active_eta_data_h = ModelHandler(fname=self.models_active_eta_fname)
+        self.models_active_eta_data_h = ModelHandler(fname=self.models_active_eta_fname)
         
         self.loss_history_active_x = None
         self.loss_history_active_eta = None
