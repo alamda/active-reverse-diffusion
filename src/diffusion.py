@@ -13,6 +13,7 @@ from tqdm.auto import tqdm
 
 import functools
 import gc
+import os
 
 class Diffusion(AbstractBaseClass):
     def __init__(self, ofile_base="", 
@@ -97,79 +98,85 @@ class Diffusion(AbstractBaseClass):
         self.num_active_reverse_diffusion_steps = None
 
     def forward_diffusion_passive(self):
-        if self.passive_noise is not None:
-            self.forward_passive_data_h.create_new_file(overwrite=self.overwrite)
+        if not os.path.isfile(self.forward_passive_fname):
+            if self.passive_noise is not None:
+                self.forward_passive_data_h.create_new_file(overwrite=self.overwrite)
 
-            self.target.mmap_sample()
-            
-            self.forward_passive_data_h.write_tensor_to_file(tensor=self.target.sample)
-            
-            sample_t = self.target.sample.detach()
-
-            bar = tqdm(range(0, self.num_diffusion_steps))
-            
-            bar.set_description("Forward diffusion - passive")
-            
-            for t_idx, e in enumerate(bar):
-                sample_t = sample_t - self.dt*sample_t + \
-                    np.sqrt(2*self.passive_noise.temperature*self.dt) * \
-                    torch.normal(torch.zeros_like(sample_t),
-                                torch.ones_like(sample_t))
+                self.target.mmap_sample()
                 
-                self.forward_passive_data_h.write_tensor_to_file(tensor=sample_t)
+                self.forward_passive_data_h.write_tensor_to_file(tensor=self.target.sample)
+                
+                sample_t = self.target.sample.detach()
 
-            del sample_t
-            del self.target.sample
-            gc.collect()
+                bar = tqdm(range(0, self.num_diffusion_steps))
+                
+                bar.set_description("Forward diffusion - passive")
+                
+                for t_idx, e in enumerate(bar):
+                    sample_t = sample_t - self.dt*sample_t + \
+                        np.sqrt(2*self.passive_noise.temperature*self.dt) * \
+                        torch.normal(torch.zeros_like(sample_t),
+                                    torch.ones_like(sample_t))
+                    
+                    self.forward_passive_data_h.write_tensor_to_file(tensor=sample_t)
 
-            self.target.close_mmap()
+                del sample_t
+                del self.target.sample
+                gc.collect()
+
+                self.target.close_mmap()
+        else:
+            print("Forward passive diffusion trajectory file found, not running passive forward diffusion")
  
     @abstractmethod
     def sample_from_diffusion_passive(self):
         """Reverse diffusion process with passive noise"""
 
     def forward_diffusion_active(self):
-        if self.active_noise is not None:
-            self.forward_active_x_data_h.create_new_file(overwrite=self.overwrite)
-            self.forward_active_eta_data_h.create_new_file(overwrite=self.overwrite)
+        if (not os.path.isfile(self.forward_active_x_fname)) or (not os.path.isfile(self.forward_active_eta_fname)):
+            if self.active_noise is not None:
+                self.forward_active_x_data_h.create_new_file(overwrite=self.overwrite)
+                self.forward_active_eta_data_h.create_new_file(overwrite=self.overwrite)
 
-            self.target.mmap_sample()
+                self.target.mmap_sample()
 
-            eta = torch.normal(torch.zeros_like(self.target.sample),
-                            np.sqrt(self.active_noise.temperature.active /
-                                    self.active_noise.correlation_time)
-                            * torch.ones_like(self.target.sample)
-                            )
-            
-            self.forward_active_x_data_h.write_tensor_to_file(tensor=self.target.sample)
-            self.forward_active_eta_data_h.write_tensor_to_file(tensor=eta)
-            
-            sample_t = self.target.sample
-
-            bar = tqdm(range(self.num_diffusion_steps))
-            
-            bar.set_description("Forward diffusion - active")
-
-            for t_idx, e in enumerate(bar):
-                sample_t = sample_t - self.dt*sample_t + self.dt*eta + \
-                    np.sqrt(2*self.active_noise.temperature.passive*self.dt) * \
-                    torch.normal(torch.zeros_like(sample_t),
-                                torch.ones_like(sample_t))
-
-                eta = eta - (1/self.active_noise.correlation_time)*self.dt*eta + \
-                    (1/self.active_noise.correlation_time) * \
-                    np.sqrt(2*self.active_noise.temperature.active*self.dt) * \
-                    torch.normal(torch.zeros_like(eta), torch.ones_like(eta))
-
-                self.forward_active_x_data_h.write_tensor_to_file(tensor=sample_t)
+                eta = torch.normal(torch.zeros_like(self.target.sample),
+                                np.sqrt(self.active_noise.temperature.active /
+                                        self.active_noise.correlation_time)
+                                * torch.ones_like(self.target.sample)
+                                )
+                
+                self.forward_active_x_data_h.write_tensor_to_file(tensor=self.target.sample)
                 self.forward_active_eta_data_h.write_tensor_to_file(tensor=eta)
-    
-            del sample_t
-            del eta
-            del self.target.sample
-            gc.collect()
-                        
-            self.target.close_mmap()
+                
+                sample_t = self.target.sample
+
+                bar = tqdm(range(self.num_diffusion_steps))
+                
+                bar.set_description("Forward diffusion - active")
+
+                for t_idx, e in enumerate(bar):
+                    sample_t = sample_t - self.dt*sample_t + self.dt*eta + \
+                        np.sqrt(2*self.active_noise.temperature.passive*self.dt) * \
+                        torch.normal(torch.zeros_like(sample_t),
+                                    torch.ones_like(sample_t))
+
+                    eta = eta - (1/self.active_noise.correlation_time)*self.dt*eta + \
+                        (1/self.active_noise.correlation_time) * \
+                        np.sqrt(2*self.active_noise.temperature.active*self.dt) * \
+                        torch.normal(torch.zeros_like(eta), torch.ones_like(eta))
+
+                    self.forward_active_x_data_h.write_tensor_to_file(tensor=sample_t)
+                    self.forward_active_eta_data_h.write_tensor_to_file(tensor=eta)
+        
+                del sample_t
+                del eta
+                del self.target.sample
+                gc.collect()
+                            
+                self.target.close_mmap()
+        else:
+            print("Forward active diffusion trajectory files found, not running active forward diffusion")
           
     @abstractmethod
     def sample_from_diffusion_active(self):
