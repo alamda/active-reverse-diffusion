@@ -22,7 +22,8 @@ class TargetAbstract(AbstractBaseClass):
                  xmax=None,
                  ymin=None,
                  ymax=None, 
-                 target_sample_fname="target.npy"):
+                 target_sample_fname="target.npy",
+                 generate=True):
         
         self.name = name
         self.sample_size = int(sample_size)
@@ -47,13 +48,13 @@ class TargetAbstract(AbstractBaseClass):
         self.target_sample_data_h = DiffusionSampleHandler(fname=self.target_sample_fname,
                                                         sample_size=self.sample_size,
                                                         sample_dim=self.sample_dim)
-        self.target_sample_data_h.create_new_file()
     
     @abstractmethod
     def gen_target_sample(self):
         """Define the target dsn and sample it after it was initialized"""
 
     def gen_target_sample_to_file(self):
+        self.target_sample_data_h.create_new_file()
             
         with open(self.target_sample_fname, 'wb') as f:
             gen_batch_size = 10000

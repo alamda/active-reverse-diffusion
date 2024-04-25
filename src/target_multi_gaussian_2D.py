@@ -15,8 +15,8 @@ class TargetMultiGaussian2D(TargetAbstract):
                  ymin=None, ymax=None, 
                  num_bins=None,
                  num_points_x=None,
-                 num_points_y=None
-                 ):
+                 num_points_y=None,
+                 generate=True):
 
         super().__init__(name=name, 
                          sample_size=sample_size,
@@ -24,7 +24,8 @@ class TargetMultiGaussian2D(TargetAbstract):
                          xmin=xmin, 
                          xmax=xmax,
                          ymin=ymin,
-                         ymax=ymax)
+                         ymax=ymax,
+                         generate=generate)
 
         self.ymin = ymin
         self.ymax = ymax
@@ -40,7 +41,7 @@ class TargetMultiGaussian2D(TargetAbstract):
                       self.pi_list, self.sample_size]
 
 
-        if all(val is not None for val in param_list):
+        if all(val is not None for val in param_list) and generate:
             if (num_bins is not None):
                 self.gen_target_sample(num_bins=num_bins)
             elif (num_points_x is not None) and (num_points_y is not None):
