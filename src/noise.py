@@ -35,10 +35,8 @@ class Temperature:
 
 
 class Noise(AbstractBaseClass):
-    def __init__(self, name="noise", dim=None):
-
+    def __init__(self, name="noise"):
         self.name = name
-        self.set_dimension(dim=dim)
 
     @abstractmethod
     def set_temperature(self):
@@ -48,22 +46,10 @@ class Noise(AbstractBaseClass):
     def check_temperature(self):
         """Check that the temperature value is valid"""
 
-    def set_dimension(self, dim):
-        """Set the array dimension for the noise"""
-        self.dim = dim
-        self.check_dimension()
-
-    def check_dimension(self):
-        try:
-            if self.dim is None:
-                raise TypeError
-        except TypeError:
-            print("Noise dimension cannot be None")
-
 
 class NoiseActive(Noise):
-    def __init__(self, name="active_noise", Tp=None, Ta=None, tau=None, dim=None):
-        super().__init__(name=name, dim=dim)
+    def __init__(self, name="active_noise", Tp=None, Ta=None, tau=None):
+        super().__init__(name=name)
 
         self.set_temperature(passive=Tp, active=Ta)
         self.set_correlation_time(tau=tau)
@@ -88,7 +74,7 @@ class NoiseActive(Noise):
 
 class NoisePassive(Noise):
     def __init__(self, name="passive_noise", T=None, dim=None):
-        super().__init__(name=name, dim=dim)
+        super().__init__(name=name)
 
         self.set_temperature(T=T)
 
@@ -107,15 +93,13 @@ class NoisePassive(Noise):
 if __name__ == "__main__":
     # Passive noise example
     T = 0.5
-    dim = 10000
 
-    myPassiveNoise = NoisePassive(T=T, dim=dim)
+    myPassiveNoise = NoisePassive(T=T)
 
     # Active noise example
 
     Tp = 0.5
     Ta = 0.5
     tau = 0.2
-    dim = 10000
 
-    myActiveNoise = NoiseActive(Tp=Tp, Ta=Ta, tau=tau, dim=dim)
+    myActiveNoise = NoiseActive(Tp=Tp, Ta=Ta, tau=tau)
