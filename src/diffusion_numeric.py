@@ -25,9 +25,9 @@ class DiffusionNumeric(Diffusion):
                  data_proc=None,
                  sample_size=None,
                  nn_batch_size=1000,
-                 passive_models_fname="passive_models.pt",
-                 active_models_x_fname="active_models_x.pt",
-                 active_models_eta_fname="active_models_eta.pt"):
+                 models_passive_fname="models_passive.pt",
+                 models_active_x_fname="models_active_x.pt",
+                 models_active_eta_fname="models_active_eta.pt"):
 
         super().__init__(ofile_base=ofile_base,
                          passive_noise=passive_noise,
@@ -45,22 +45,19 @@ class DiffusionNumeric(Diffusion):
         else:
             self.nn_batch_size = self.sample_size
         
-        self.passive_models_fname = passive_models_fname
-        self.passive_models_data_h = ModelHandler(fname=self.passive_models_fname)
-        self.passive_models_data_h.create_new_file()
+        self.models_passive_fname = models_passive_fname
+        self.models_passive_data_h = ModelHandler(fname=self.models_passive_fname)
         
-        self.passive_loss_history = None
+        self.loss_history_passive = None
 
-        self.active_models_x_fname = active_models_x_fname
-        self.active_models_x_data_h = ModelHandler(fname=self.active_models_x_fname)
-        self.active_models_x_data_h.create_new_file()
+        self.models_active_x_fname = models_active_x_fname
+        self.models_active_x_data_h = ModelHandler(fname=self.models_active_x_fname)
         
-        self.active_models_eta_fname = active_models_eta_fname
-        self.active_models_eta_data_h = ModelHandler(fname=self.active_models_eta_fname)
-        self.active_models_eta_data_h.create_new_file()
+        self.models_active_eta_fname = models_active_eta_fname
+        self.models_Active_eta_data_h = ModelHandler(fname=self.models_active_eta_fname)
         
-        self.active_loss_history_x = None
-        self.active_loss_history_eta = None
+        self.loss_history_active_x = None
+        self.loss_history_active_eta = None
 
     def compute_loss_passive(self, t_idx, forward_samples, forward_samples_zero, score_model):
         sample_t = forward_samples.reshape(self.sample_size, self.sample_dim).type(torch.DoubleTensor)
@@ -75,9 +72,11 @@ class DiffusionNumeric(Diffusion):
         return loss, torch.mean(l**2), torch.mean(scr**2)
 
     def train_diffusion_passive(self, nrnodes=4, iterations=500):
+        self.models_passive_data_h.create_new_file()
+        
         loss_history = []
         
-        self.passive_models_data_h.clear_models()
+        self.models_passive_data_h.clear_models()
         
         forward_samples = self.forward_passive_data_h.mmap_tensor_from_file()
 
@@ -111,7 +110,7 @@ class DiffusionNumeric(Diffusion):
 
             bar.set_description(f'Passive training - Time: {t_idx} Loss: {loss.item():.4f}')
 
-            self.passive_models_data_h.write_model_to_file(model=score_model)
+            self.models_passive_data_h.write_model_to_file(model=score_model)
 
             loss_history.append(loss.item())
 
@@ -126,7 +125,7 @@ class DiffusionNumeric(Diffusion):
             gc.collect()
 
         self.passive_forward_time_arr = np.array(time_step_list)
-        self.passive_loss_history = np.array(loss_history)
+        self.loss_history_passive = np.array(loss_history)
         
         del forward_samples
         gc.collect()
@@ -247,11 +246,14 @@ class DiffusionNumeric(Diffusion):
         return M11, M12, M22
 
     def train_diffusion_active(self, nrnodes=4, iterations=500):
+        self.models_active_x_data_h.create_new_file()
+        self.models_active_eta_data_h.create_new_file()
+        
         loss_history_x = []
         loss_history_eta = []
         
-        forward_samples_x = self.forward_x_active_data_h.mmap_tensor_from_file()
-        forward_samples_eta = self.forward_eta_active_data_h.mmap_tensor_from_file()
+        forward_samples_x = self.forward_active_x_data_h.mmap_tensor_from_file()
+        forward_samples_eta = self.forward_active_eta_data_h.mmap_tensor_from_file()
 
         t_idx = 1
 
@@ -304,8 +306,8 @@ class DiffusionNumeric(Diffusion):
             bar.set_description(
                 f'Active training - Time: {t_idx} Loss: {loss_x.item():.4f} Fx: {loss_Fx.item():.4f} scr_x: {loss_scr_x.item():.4f}')
 
-            self.active_models_x_data_h.write_model_to_file(model=score_model_x)
-            self.active_models_eta_data_h.write_model_to_file(model=score_model_eta)
+            self.models_active_x_data_h.write_model_to_file(model=score_model_x)
+            self.models_active_eta_data_h.write_model_to_file(model=score_model_eta)
 
             loss_history_x.append(loss_x.item())
             loss_history_eta.append(loss_eta.item())
@@ -324,15 +326,15 @@ class DiffusionNumeric(Diffusion):
 
         self.active_forward_time_arr = np.array(time_step_list)
 
-        self.active_loss_history_x = np.array(loss_history_x)
-        self.active_loss_history_eta = np.array(loss_history_eta)
+        self.loss_history_active_x = np.array(loss_history_x)
+        self.loss_history_active_eta = np.array(loss_history_eta)
         
         del forward_samples_x
         del forward_samples_eta
         gc.collect()
         
-        self.forward_x_active_data_h.close_mmap()
-        self.forward_eta_active_data_h.close_mmap()
+        self.forward_active_x_data_h.close_mmap()
+        self.forward_active_eta_data_h.close_mmap()
         
         gc.collect()
 
@@ -355,11 +357,11 @@ class DiffusionNumeric(Diffusion):
            torch.normal(torch.zeros(self.sample_size, self.sample_dim),
                              torch.ones(self.sample_size, self.sample_dim)).type(torch.DoubleTensor)
         
-        self.reverse_x_active_data_h.create_new_file(fname=self.reverse_x_active_data_h.fname)
-        self.reverse_x_active_data_h.write_tensor_to_file(tensor=x)
+        self.reverse_active_x_data_h.create_new_file(fname=self.reverse_active_x_data_h.fname)
+        self.reverse_active_x_data_h.write_tensor_to_file(tensor=x)
 
-        self.reverse_eta_active_data_h.create_new_file(fname=self.reverse_eta_active_data_h.fname)
-        self.reverse_eta_active_data_h.write_tensor_to_file(tensor=eta)
+        self.reverse_active_eta_data_h.create_new_file(fname=self.reverse_active_eta_data_h.fname)
+        self.reverse_active_eta_data_h.write_tensor_to_file(tensor=eta)
             
         time_step_list = []
 
@@ -393,8 +395,8 @@ class DiffusionNumeric(Diffusion):
                 torch.normal(torch.zeros_like(eta),
                              torch.ones_like(eta))
 
-            self.reverse_x_active_data_h.write_tensor_to_file(tensor=x)
-            self.reverse_eta_active_data_h.write_tensor_to_file(tensor=eta)
+            self.reverse_active_x_data_h.write_tensor_to_file(tensor=x)
+            self.reverse_active_eta_data_h.write_tensor_to_file(tensor=eta)
 
         self.active_reverse_time_arr = np.array(time_step_list)
         
