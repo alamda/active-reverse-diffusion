@@ -2,11 +2,11 @@ import configparser
 
 
 class Configs:
-    def __init__(self, filename="diffusion.conf"):
+    def __init__(self, fname="diffusion.conf"):
         self.parser = configparser.ConfigParser()
-        self.filename = filename
+        self.fname = fname
 
-        self.parser.read(filename)
+        self.parser.read(self.fname)
 
         self.ofile_base = str(self.parser['output']['file_name'])
 
@@ -41,9 +41,9 @@ class Configs:
         self.num_diffusion_steps = int(self.parser['diffusion']['num_steps'])
         self.dt = float(self.parser['diffusion']['dt'])
         
-        if self.diffusion_calculation_type in ('numeric', 'Numeric'):
-            self.passive_training_iters = int(self.parser['diffusion']['passive_training_iters'])
-            self.active_training_iters = int(self.parser['diffusion']['active_training_iters'])
+        # if self.diffusion_calculation_type in ('numeric', 'Numeric'):
+        self.passive_training_iters = int(self.parser['diffusion']['passive_training_iters'])
+        self.active_training_iters = int(self.parser['diffusion']['active_training_iters'])
         self.reverse_sample_step_interval = int(self.parser['diffusion']['reverse_sample_step_interval'])
 
         # [passive noise]
@@ -64,7 +64,7 @@ class Configs:
                     configparser.ConfigParser(
                         converters={'list': lambda x: [float(i.strip()) for i in x.split(',')]})
 
-                self.target_parser.read(filename)
+                self.target_parser.read(self.fname)
 
                 if self.sample_dim == 1:
                     self.mu_list = self.target_parser.getlist('target', 'mu_list')

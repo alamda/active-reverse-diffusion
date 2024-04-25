@@ -5,7 +5,7 @@ from read_configs import Configs
 import pathlib
 
 class ConfigsTest_Factory:
-    filename = "test.tmp"
+    fname = "test.tmp"
 
     sample_size = 100
     sample_dim = 2
@@ -48,7 +48,7 @@ class ConfigsTest_Factory:
     models_active_eta_fname = "models_active_eta.pkl"
 
     def write_config_file(self):
-        with open(self.filename, 'w') as f:
+        with open(self.fname, 'w') as f:
             newline = '\n'
 
             f.write(f'[sample]{newline}')
@@ -122,7 +122,7 @@ class ConfigsTest_Factory:
             f.write(f'models_active_eta: {self.models_active_eta_fname}{newline}')
 
     def delete_config_file(self):
-        file_path = pathlib.Path(self.filename)
+        file_path = pathlib.Path(self.fname)
         file_path.unlink()
 
 
@@ -130,7 +130,7 @@ def test_init():
     myFactory = ConfigsTest_Factory()
     myFactory.write_config_file()
 
-    myConfigs = Configs(filename=myFactory.filename)
+    myConfigs = Configs(fname=myFactory.fname)
 
     assert myConfigs.sample_size == myFactory.sample_size
     assert myConfigs.sample_dim == myFactory.sample_dim
