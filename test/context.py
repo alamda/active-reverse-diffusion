@@ -12,3 +12,4 @@ import target
 import target_multi_gaussian_1D
 import target_multi_gaussian_2D
 import data_handler
+import read_configs
