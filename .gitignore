@@ -6,6 +6,7 @@ runs/
 *.dot
 *.mp4
 *.npy
+*.pt
 
 scripts/diffusion.conf
 scripts/*.bin
