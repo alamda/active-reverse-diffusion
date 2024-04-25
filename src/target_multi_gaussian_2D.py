@@ -42,6 +42,7 @@ class TargetMultiGaussian2D(TargetAbstract):
                       self.sigma_list,
                       self.pi_list, self.sample_size]
 
+        self.gen_target_prob()
 
         if not os.path.isfile(self.target_sample_fname):
             if all(val is not None for val in param_list):
@@ -54,7 +55,7 @@ class TargetMultiGaussian2D(TargetAbstract):
         else:
             print("Target sample file found, loading from file")
 
-    def gen_target_sample(self, mu_x_list=None, mu_y_list=None,
+    def gen_target_prob(self, mu_x_list=None, mu_y_list=None,
                           sigma_list=None,
                           pi_list=None,
                           sample_size=None,
@@ -95,6 +96,9 @@ class TargetMultiGaussian2D(TargetAbstract):
             num_points_x = num_bins
             num_points_y = num_bins
 
+        self.num_points_x = num_points_x
+        self.num_points_y = num_points_y
+
         x_arr = np.linspace(self.xmin, self.xmax, num_points_x)
         y_arr = np.linspace(self.ymin, self.ymax, num_points_y)
 
@@ -124,8 +128,9 @@ class TargetMultiGaussian2D(TargetAbstract):
         self.target_hist_idx_prob_arr = prob_arr_flat
         self.target_hist_idx_arr = idx_arr
         
-        self.gen_target_sample_to_file()
-        
+    def gen_target_sample(self):
+        self.gen_target_sample_to_file()   
+
         ### Code below moved to 
         ### TargetAbstract.gen_target_sample_file
         # idx_samples = np.random.choice(len(idx_arr), self.sample_size, p=prob_arr_flat)
