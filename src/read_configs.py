@@ -46,6 +46,9 @@ class Configs:
         self.active_training_iters = int(self.parser['diffusion']['active_training_iters'])
         self.reverse_sample_step_interval = int(self.parser['diffusion']['reverse_sample_step_interval'])
 
+        if self.reverse_sample_step_interval >= self.num_diffusion_steps:
+            self.reverse_sample_step_interval = self.num_diffusion_steps // 10
+
         # [passive noise]
         self.passive_noise_T = float(self.parser['passive noise']['T'])
         
