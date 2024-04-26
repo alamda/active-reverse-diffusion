@@ -172,14 +172,3 @@ class TargetMultiGaussian2D(TargetAbstract):
     
     def gen_target_sample(self):
         self.gen_target_sample_to_file()   
-
-        ### Code below moved to 
-        ### TargetAbstract.gen_target_sample_file
-        # idx_samples = np.random.choice(len(idx_arr), self.sample_size, p=prob_arr_flat)
-
-        # x_samples = [x_arr[idx_arr[idx][0]] for idx in idx_samples]
-        # y_samples = [y_arr[idx_arr[idx][1]] for idx in idx_samples]
-
-        # sample = list(zip(x_samples, y_samples))
-        
-        # self.sample = torch.from_numpy(np.array([list(s) for s in sample]))
