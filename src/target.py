@@ -51,46 +51,6 @@ class TargetAbstract(AbstractBaseClass):
     @abstractmethod
     def gen_target_sample(self):
         """Define the target dsn and sample it after it was initialized"""
-
-    def gen_target_sample_to_file(self):
-        self.target_sample_data_h.create_new_file()
-            
-        with open(self.target_sample_fname, 'wb') as f:
-            gen_batch_size = 10000
-            
-            num_batches = self.sample_size // gen_batch_size
-            
-            sample_mod_batch = self.sample_size % gen_batch_size
-            
-            bar = tqdm(range(num_batches))
-            
-            bar.set_description("Target sample generation")
-            
-            def gen_samples(num_samples):
-                sample_idx_list = np.random.choice(len(self.target_hist_idx_arr), num_samples, 
-                                              p=self.target_hist_idx_prob_arr)
-
-                # Only implemented for 2D for now
-                x_samples = [self.x_arr[self.target_hist_idx_arr[idx][0]] for idx in sample_idx_list]
-                y_samples = [self.y_arr[self.target_hist_idx_arr[idx][1]] for idx in sample_idx_list]        
-                
-                return torch.from_numpy(np.array(list(zip(x_samples, y_samples))))
-            
-            for e in bar:
-                sample = gen_samples(gen_batch_size)
-                 
-                self.target_sample_data_h.write_tensor_to_file(tensor=sample)      
-                
-                del sample
-                gc.collect()
-            
-            if sample_mod_batch > 0: 
-                sample = gen_samples(sample_mod_batch)
-                
-                self.target_sample_data_h.write_tensor_to_file(tensor=sample)            
-                                
-                del sample
-                gc.collect()
     
     def mmap_sample(self):
         self.sample = self.target_sample_data_h.mmap_tensor_from_file()
