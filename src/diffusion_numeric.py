@@ -151,7 +151,7 @@ class DiffusionNumeric(Diffusion):
         if time is None:
             reverse_diffusion_step_start = self.num_diffusion_steps - 2
         else:
-            reverse_diffusion_step_start = int(np.ceil(time/self.dt)) - 1
+            reverse_diffusion_step_start = int(np.floor(time/self.dt)) - 1
 
             try:
                 if reverse_diffusion_step_start > self.num_diffusion_steps - 2:
@@ -368,7 +368,7 @@ class DiffusionNumeric(Diffusion):
         if time is None:
             reverse_diffusion_step_start = self.num_diffusion_steps - 2
         else:
-            reverse_diffusion_step_start = int(np.ceil(time/self.dt)) - 1
+            reverse_diffusion_step_start = int(np.floor(time/self.dt)) - 1
 
         self.num_active_rverse_diffusion_steps = reverse_diffusion_step_start + 1
 
