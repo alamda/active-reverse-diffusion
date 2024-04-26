@@ -36,17 +36,17 @@ def main():
     fig.set_size_inches(6,2)
     fig.suptitle("Target")
     axs = fig.subplots(1,2)
+
+    axs[0].hist2d(sample_x, sample_y, bins=myConfigs.num_hist_bins)
+
+    axs[0].set_title("Sample")
     
-    axs[0].imshow(prob_arr.T,
+    axs[1].imshow(prob_arr.T,
                   extent=extent,
                   origin='lower')
     
-    axs[0].set_title("Probability")
+    axs[1].set_title("Probability")
 
-    axs[1].hist2d(sample_x, sample_y, bins=myConfigs.num_hist_bins)
-
-    axs[1].set_title("Sample")
-    
     # divider = make_axes_locatable(axs[1])
     # cax = divider.append_axes("right", size="5%", pad=0.05)
     
