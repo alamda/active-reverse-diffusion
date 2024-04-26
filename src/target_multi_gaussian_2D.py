@@ -121,10 +121,13 @@ class TargetMultiGaussian2D(TargetAbstract):
 
         self.x_arr = x_arr
         self.y_arr = y_arr
-        self.prob_arr = z_arr
+        # Need to transpose prob arr to match directionality of ndenumerate and meshgrid
+        # Scan across x first
+        self.prob_arr = z_arr.T
         
         prob_arr_flat = z_arr.flatten()
-        idx_list = [idx for idx, _ in np.ndenumerate(x_mesh)]
+        # Reverse tuple to scan across x first
+        idx_list = [tuple(reversed(idx)) for idx, _ in np.ndenumerate(x_mesh)]
         idx_arr = np.array(idx_list)
         
         self.target_hist_idx_prob_arr = prob_arr_flat
