@@ -44,7 +44,7 @@ class TargetMultiGaussian2D(TargetAbstract):
                       self.sigma_list,
                       self.pi_list, self.sample_size]
 
-        self.gen_target_prob()
+        self.gen_target_prob(num_bins=num_bins)
 
         if not os.path.isfile(self.target_sample_fname):
             if all(val is not None for val in param_list):
