@@ -35,7 +35,7 @@ def main():
     
     passive_forward = myDiffNum.forward_passive_data_h.mmap_tensor_from_file()
         
-    extent = [myConfigs.xmin, myConfigs.xmax, myConfigs.ymin, myConfigs.ymax]
+    hist_range = [[myConfigs.xmin, myConfigs.xmax], [myConfigs.ymin, myConfigs.ymax]]
     
     time_f = 0
     time_l = myConfigs.dt * len(passive_forward)
@@ -47,11 +47,13 @@ def main():
     axs = fig.subplots(1,2)
     
     img0 = axs[0].hist2d(passive_forward[0][:,0], passive_forward[0][:,1],
+                         range=hist_range,
                          bins=myConfigs.num_hist_bins)
     
     axs[0].set_title(f't={time_f:.3f}')
     
     img1 = axs[1].hist2d(passive_forward[-1][:,0], passive_forward[-1][:,1],
+                         range=hist_range,
                          bins=myConfigs.num_hist_bins)
     
     axs[1].set_title(f't={time_l:.3f}')
