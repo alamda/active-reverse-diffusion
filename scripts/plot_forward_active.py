@@ -42,24 +42,20 @@ def main():
     time_f = 0
     time_l = myConfigs.dt * len(active_forward)
     
-    af_f, _, _ = np.histogram2d(active_forward[0][:,0], 
-                                active_forward[0][:,1],
-                                bins=myConfigs.num_hist_bins)
-    
-    af_l, _, _ = np.histogram2d(active_forward[-1][:,0], 
-                                active_forward[-1][:,1],
-                                bins=myConfigs.num_hist_bins)
-
     fig = figure.Figure()
     fig.set_size_inches(6,2)
     fig.suptitle("Active Forward Diffusion")
     
     axs = fig.subplots(1,2)
     
-    img0 = axs[0].imshow(af_f, extent=extent)
+    img0 = axs[0].hist2d(active_forward[0][:,0], active_forward[0][:,1],
+                         bins=myConfigs.num_hist_bins)
+    
     axs[0].set_title(f't={time_f:.3f}')
     
-    img1 = axs[1].imshow(af_l, extent=extent)
+    img1 = axs[1].hist2d(active_forward[-1][:,0], active_forward[-1][:,1],
+                         bins=myConfigs.num_hist_bins)
+    
     axs[1].set_title(f't={time_l:.3f}')
     
     fig.tight_layout()    

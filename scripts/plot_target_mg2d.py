@@ -27,8 +27,7 @@ def main():
     
     extent = [myTarget.xmin, myTarget.xmax, myTarget.ymin, myTarget.ymax]
     
-    idx_arr = myTarget.target_hist_idx_arr
-    prob_arr = myTarget.target_hist_idx_prob_arr
+    prob_arr = myTarget.prob_arr
 
     sample_x = myTarget.sample[:,0].numpy()
     sample_y = myTarget.sample[:,1].numpy()
@@ -37,16 +36,15 @@ def main():
     fig.set_size_inches(6,2)
     fig.suptitle("Target")
     axs = fig.subplots(1,2)
-
-    hist, _, _ = np.histogram2d(sample_x, sample_y)
     
-    axs[0].imshow(prob_arr.reshape(myTarget.num_points_x, myTarget.num_points_y),
-                  extent=extent)
+    axs[0].imshow(prob_arr.T,
+                  extent=extent,
+                  origin='lower')
     
     axs[0].set_title("Probability")
 
-    axs[1].imshow(hist, extent=[myConfigs.xmin, myConfigs.xmax,
-                                 myConfigs.ymin, myConfigs.ymax])
+    axs[1].hist2d(sample_x, sample_y, bins=myConfigs.num_hist_bins)
+
     axs[1].set_title("Sample")
     
     # divider = make_axes_locatable(axs[1])
