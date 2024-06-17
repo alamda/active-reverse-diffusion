@@ -1,5 +1,7 @@
 from diffusion import Diffusion
+from torch.distributions.multivariate_normal import MultivariateNormal
 
+import torch
 import numpy as np
 
 
@@ -14,7 +16,6 @@ class DiffusionAnalytic(Diffusion):
                          num_diffusion_steps=num_diffusion_steps,
                          dt=dt,
                          k=k,
-                         sample_dim=sample_dim,
                          data_proc=data_proc,
                          diffusion_type='analytic')
 
@@ -49,7 +50,7 @@ class DiffusionAnalytic(Diffusion):
             print("Analytical diffusion implemented only for 'gaussian' target type")
 
     def sample_from_diffusion_passive(self, time=None):
-        x_t = np.sqrt(self.passive_noise.temperature) * \
+        x_t = np.sqrt(self.passive_noise.temperature * self.k) * \
             np.random.randn(self.sample_dim)
 
         samples = [x_t]
@@ -171,16 +172,34 @@ class DiffusionAnalytic(Diffusion):
             print("Analytical diffusion implemented only for 'gaussian' target type")
 
     def sample_from_diffusion_active(self, time=None):
-        x = np.sqrt(self.active_noise.temperature.passive/self.k +
-                    (self.active_noise.temperature.active /
-                     (self.k**2 * self.active_noise.correlation_time + self.k)
-                     )
-                    ) * np.random.randn(self.sample_dim)
+        Tp = self.active_noise.temperature.passive
+        Ta = self.active_noise.temperature.active
+        tau = self.active_noise.correlation_time
+        
+        var_11 = 1/self.k * (Tp + Ta/(1+ self.k*tau))
+        var_12 = Ta/(1 + tau*self.k)
+        var_22 = Ta / tau
+        
+        zero_mean = torch.zeros(2)
+        
+        covar = torch.tensor([var_11, var_12, var_12, var_22], device=zero_mean.device)
+        covar = torch.reshape(covar, (2,2))
+        
+        sampler = MultivariateNormal(loc=zero_mean, covariance_matrix=covar)
+        
+        sample = sampler.sample(sample_shape=torch.Size([self.sample_size]))
+        
+        sample_x, sample_eta = torch.chunk(sample, 2, dim=1)
+        
+        self.reverse_active_x_data_h.create_new_file(fname=self.reverse_active_x_data_h.fname)
+        self.reverse_active_x_data_h.write_tensor_to_file(tensor=sample_x)
 
-        eta = np.sqrt(self.active_noise.temperature.active /
-                      self.active_noise.correlation_time) * \
-            np.random.randn(self.sample_dim)
-
+        self.reverse_active_eta_data_h.create_new_file(fname=self.reverse_active_eta_data_h.fname)
+        self.reverse_active_eta_data_h.write_tensor_to_file(tensor=sample_eta)
+        
+        x = sample_x.numpy()
+        eta = sample_eta.numpy()
+        
         samples_x = [x]
         samples_eta = [eta]
 
@@ -214,6 +233,9 @@ class DiffusionAnalytic(Diffusion):
 
             samples_x.append(x)
             samples_eta.append(eta)
+                        
+            self.reverse_active_x_data_h.write_tensor_to_file(tensor=torch.from_numpy(x))
+            self.reverse_active_eta_data_h.write_tensor_to_file(tensor=torch.from_numpy(eta))
 
         self.active_reverse_time_arr = np.array(time_step_list)
 

@@ -10,13 +10,17 @@ class TargetMultiGaussian(TargetAbstract):
                  pi_list=None, 
                  sample_size=None,
                  xmin=None, 
-                 xmax=None):
+                 xmax=None,
+                 num_bins=None,
+                 num_points=None,
+                 target_sample_fname="target.npy"):
 
         super().__init__(name=name, 
                          sample_size=sample_size,
-                         sample_dim=1, 
+                         sample_dim=1,
                          xmin=xmin, 
-                         xmax=xmax)
+                         xmax=xmax,
+                         target_sample_fname=target_sample_fname)
 
         self.sigma_list = sigma_list
         self.mu_list = mu_list
@@ -37,6 +41,8 @@ class TargetMultiGaussian(TargetAbstract):
                           xmin=None, 
                           xmax=None, 
                           num_points=50000):
+        self.target_sample_data_h.create_new_file()
+        
         sigma_list = self.sigma_list if sigma_list is None else sigma_list
         self.sigma_list = sigma_list
 
@@ -67,6 +73,8 @@ class TargetMultiGaussian(TargetAbstract):
 
         self.sample = torch.from_numpy(
             np.random.choice(x_arr, size=self.sample_size, p=y_arr))
+        
+        self.target_sample_data_h.write_tensor_to_file(tensor=self.sample)  
 
 
 if __name__ == "__main__":

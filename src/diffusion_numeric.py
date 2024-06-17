@@ -14,6 +14,8 @@ import mmap
 import gc
 import sys
 
+from torch.distributions.multivariate_normal import MultivariateNormal
+
 class DiffusionNumeric(Diffusion):
     def __init__(self, ofile_base="", 
                  passive_noise=None, 
@@ -345,18 +347,34 @@ class DiffusionNumeric(Diffusion):
         if all_models_eta is None:
             all_models_eta = self.active_models_eta_data_h.load_models()
 
-        x = np.sqrt(self.active_noise.temperature.passive/self.k +
-                    (self.active_noise.temperature.active /
-                     (self.k**2 * self.active_noise.correlation_time + self.k)
-                     )
-                    ) * torch.normal(torch.zeros(self.sample_size, self.sample_dim),
-                             torch.ones(self.sample_size, self.sample_dim)).type(torch.DoubleTensor)
-
-        eta = np.sqrt(self.active_noise.temperature.active /
-                      self.active_noise.correlation_time) * \
-           torch.normal(torch.zeros(self.sample_size, self.sample_dim),
-                             torch.ones(self.sample_size, self.sample_dim)).type(torch.DoubleTensor)
+        Tp = self.active_noise.temperature.passive
+        Ta = self.active_noise.temperature.active
+        tau = self.active_noise.correlation_time
         
+        var_11 = 1/self.k * (Tp + Ta/(1+ self.k*tau))
+        var_12 = Ta/(1 + tau*self.k)
+        var_22 = Ta / tau
+        
+        zero_mean = torch.zeros(2)
+        
+        covar = torch.tensor([var_11, var_12, var_12, var_22], device=zero_mean.device)
+        covar = torch.reshape(covar, (2,2))
+        
+        sampler = MultivariateNormal(loc=zero_mean, covariance_matrix=covar)
+        
+        sample = sampler.sample(sample_shape=torch.Size([self.sample_size]))
+        
+        sample_x, sample_eta = torch.chunk(sample, 2, dim=1)
+        
+        self.reverse_active_x_data_h.create_new_file(fname=self.reverse_active_x_data_h.fname)
+        self.reverse_active_x_data_h.write_tensor_to_file(tensor=sample_x)
+
+        self.reverse_active_eta_data_h.create_new_file(fname=self.reverse_active_eta_data_h.fname)
+        self.reverse_active_eta_data_h.write_tensor_to_file(tensor=sample_eta)
+        
+        x = sample_x.type(torch.DoubleTensor)
+        eta = sample_eta.type(torch.DoubleTensor)
+
         self.reverse_active_x_data_h.create_new_file(fname=self.reverse_active_x_data_h.fname)
         self.reverse_active_x_data_h.write_tensor_to_file(tensor=x)
 
